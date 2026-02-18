@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
-import PerfilScreen from './screens/PerfilScreen'; // ← Importar la nueva pantalla
+import PerfilScreen from './screens/PerfilScreen';
+import Loader from './components/Loader/Loader'; // Import correcto
 import Tarjeta from './components/Tarjeta';
 
 const Stack = createNativeStackNavigator();
@@ -29,6 +30,12 @@ function HomeScreen({ navigation }: any) {
 }
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (isLoading) {
+    return <Loader onComplete={() => setIsLoading(false)} />;
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>

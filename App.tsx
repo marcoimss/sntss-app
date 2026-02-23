@@ -6,6 +6,7 @@ import LoginScreen from './screens/LoginScreen';
 import PerfilScreen from './screens/PerfilScreen';
 import Loader from './components/Loader/Loader'; // Import correcto
 import Tarjeta from './components/Tarjeta';
+import ScannerScreen from './screens/ScannerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Perfil" component={PerfilScreen} />
+        <Stack.Screen name="Scanner" component={ScannerScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

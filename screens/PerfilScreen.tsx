@@ -111,6 +111,12 @@ export default function PerfilScreen({ navigation }: any) {
                 <TouchableOpacity style={styles.button} onPress={handleLogout}>
                     <Text style={styles.buttonText}>CERRAR SESIÓN</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.button, { marginTop: 10, backgroundColor: '#0B2A5C' }]}
+                    onPress={() => navigation.navigate('Scanner')}
+                >
+                    <Text style={styles.buttonText}>PROBAR ESCÁNER</Text>
+                </TouchableOpacity>
             </ScrollView>
         </View>
     );

@@ -6,10 +6,9 @@ import QRScanner from 'react-native-qr-scanner-advanced';
 export default function ScannerScreen({ navigation }: any) {
     const [encargado, setEncargado] = useState({ matricula: '', nombre: '' });
     const [scanned, setScanned] = useState(false);
-    const [tipo, setTipo] = useState('entrada'); // 'entrada' o 'salida'
+    const [tipo, setTipo] = useState('entrada');
 
     useEffect(() => {
-        // Cargar datos del encargado desde AsyncStorage
         const loadEncargado = async () => {
             try {
                 const userData = await AsyncStorage.getItem('userData');
@@ -23,7 +22,6 @@ export default function ScannerScreen({ navigation }: any) {
         };
         loadEncargado();
 
-        // Listener del QR
         const subscription = DeviceEventEmitter.addListener('QR_RESULT', async (data) => {
             if (scanned) return;
             setScanned(true);
@@ -86,7 +84,11 @@ export default function ScannerScreen({ navigation }: any) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.circleDecoration} />
+            {/* Círculos decorativos - estilo consistente */}
+            <View style={styles.circleDecoration1} />
+            <View style={styles.circleDecoration2} />
+            <View style={styles.circleDecoration3} />
+
             <View style={styles.card}>
                 <Text style={styles.title}>Registro de Asistencia</Text>
                 <Text style={styles.subtitle}>Encargado: {encargado.nombre || 'Cargando...'}</Text>
@@ -96,20 +98,25 @@ export default function ScannerScreen({ navigation }: any) {
                     <TouchableOpacity
                         style={[styles.tipoButton, tipo === 'entrada' && styles.tipoActivo]}
                         onPress={() => setTipo('entrada')}>
-                        <Text style={styles.tipoText}>Entrada</Text>
+                        <Text style={[styles.tipoText, tipo === 'entrada' && styles.tipoTextActivo]}>Entrada</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tipoButton, tipo === 'salida' && styles.tipoActivo]}
                         onPress={() => setTipo('salida')}>
-                        <Text style={styles.tipoText}>Salida</Text>
+                        <Text style={[styles.tipoText, tipo === 'salida' && styles.tipoTextActivo]}>Salida</Text>
                     </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.button} onPress={solicitarPermisoYEscaneo}>
                     <Text style={styles.buttonText}>Abrir Escáner</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={styles.secondaryButton}
+                    onPress={() => navigation.goBack()}>
+                    <Text style={styles.secondaryButtonText}>Regresar</Text>
+                </TouchableOpacity>
             </View>
-            <View style={[styles.circleDecoration, styles.bottomCircle]} />
         </View>
     );
 }
@@ -117,54 +124,75 @@ export default function ScannerScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0B2A5C',
+        backgroundColor: '#F0F7FF', // Mismo fondo que las demás pantallas
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    circleDecoration: {
+    // Círculos decorativos - exactamente como en App y Login
+    circleDecoration1: {
         position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: '#1E3F7A',
-        top: -100,
-        right: -100,
-        opacity: 0.3,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: '#003c82',
+        top: -150,
+        right: -150,
+        opacity: 0.08,
     },
-    bottomCircle: {
-        top: undefined,
-        bottom: -100,
-        left: -100,
-        right: undefined,
-        backgroundColor: '#D4AF37',
-        opacity: 0.15,
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
+        backgroundColor: '#00a8ff',
+        bottom: -120,
+        left: -120,
+        opacity: 0.08,
+    },
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        backgroundColor: '#1B476A',
+        bottom: 100,
+        right: -80,
+        opacity: 0.05,
     },
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 25,
-        padding: 25,
+        padding: 30,
         width: '100%',
         maxWidth: 400,
+        shadowColor: '#003c82',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 15,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(0, 60, 130, 0.1)',
         alignItems: 'center',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#0B2A5C',
+        color: '#003c82',
         marginBottom: 10,
         textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
-        color: '#0B2A5C',
-        marginBottom: 20,
+        color: '#4a6fa5',
+        marginBottom: 25,
+        textAlign: 'center',
     },
     tipoContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         width: '100%',
-        marginBottom: 25,
+        marginBottom: 30,
     },
     tipoButton: {
         flex: 1,
@@ -173,29 +201,56 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: '#F5F8FF',
         borderWidth: 1,
-        borderColor: '#D4AF37',
+        borderColor: '#003c82',
         alignItems: 'center',
     },
     tipoActivo: {
-        backgroundColor: '#B22234',
-        borderColor: '#B22234',
+        backgroundColor: '#003c82',
+        borderColor: '#003c82',
     },
     tipoText: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#0B2A5C',
+        fontWeight: '600',
+        color: '#003c82',
+    },
+    tipoTextActivo: {
+        color: '#FFFFFF',
     },
     button: {
-        backgroundColor: '#B22234',
+        backgroundColor: '#003c82',
         paddingHorizontal: 30,
         paddingVertical: 15,
-        borderRadius: 10,
+        borderRadius: 25,
         width: '100%',
         alignItems: 'center',
+        marginBottom: 12,
+        shadowColor: '#003c82',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
+        letterSpacing: 1,
+    },
+    secondaryButton: {
+        backgroundColor: '#F5F8FF',
+        paddingHorizontal: 30,
+        paddingVertical: 15,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: '#003c82',
+        borderStyle: 'dashed',
+        width: '100%',
+        alignItems: 'center',
+    },
+    secondaryButtonText: {
+        color: '#003c82',
+        fontSize: 16,
+        fontWeight: '600',
+        letterSpacing: 1,
     },
 });

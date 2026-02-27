@@ -1,49 +1,38 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Almacenamiento local para guardar datos de sesión
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Componente principal de la pantalla de Login
-// Recibe 'navigation' como prop para poder navegar a otras pantallas después del login exitoso
 export default function LoginScreen({ navigation }: any) {
-    // Estados locales para manejar los inputs y el estado de carga
-    const [usuario, setUsuario] = useState('');        // Almacena la matrícula ingresada
-    const [password, setPassword] = useState('');      // Almacena la contraseña
-    const [loading, setLoading] = useState(false);     // Indica si está procesando la petición (para deshabilitar botón)
+    const [usuario, setUsuario] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    // Función principal que se ejecuta al presionar el botón INGRESAR
     const handleLogin = async () => {
-        // Validación rápida: campos vacíos
         if (!usuario || !password) {
             Alert.alert('Error', 'Por favor ingresa usuario y contraseña');
             return;
         }
 
-        // Inicia la carga: deshabilita el botón y muestra "INGRESANDO..."
         setLoading(true);
 
         try {
-            // LOG DE DEPURACIÓN: muestra en consola (solo visible con Debug JS Remotely) lo que se enviará
             console.log('Enviando:', { matricula: usuario, pass: password, tipo: 'a' });
 
-            // PETICIÓN HTTP al endpoint de la API (archivo PHP en el servidor)
             const response = await fetch('https://sntss.org/api_login.php', {
-                method: 'POST',                          // Método POST como espera el backend
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json', // Indicamos que enviamos JSON
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({                   // Convertimos el objeto a JSON
-                    matricula: usuario,                  // Campo esperado por el backend (matricula)
-                    pass: password,                      // Campo esperado por el backend (pass)
-                    tipo: 'a',                           // Tipo de usuario (activo por defecto)
+                body: JSON.stringify({
+                    matricula: usuario,
+                    pass: password,
+                    tipo: 'a',
                 }),
             });
 
-            // Procesamos la respuesta JSON que viene del servidor
             const data = await response.json();
 
-            // Verificamos si el login fue exitoso (campo 'success' true)
             if (data.success) {
-                // Guardamos TODOS los datos del usuario en AsyncStorage
                 await AsyncStorage.setItem('userData', JSON.stringify({
                     nombre: data.nombre,
                     matricula: data.matricula,
@@ -54,85 +43,102 @@ export default function LoginScreen({ navigation }: any) {
                     correo: data.correo,
                 }));
 
-                navigation.navigate('Perfil');
+                navigation.navigate('Panel');
             } else {
-                // Si el servidor responde con success: false, mostramos el mensaje de error que envía
                 Alert.alert('Error', data.message || 'Credenciales incorrectas');
             }
         } catch (error) {
-            // Error de red o de conexión (ej. servidor caído, sin internet, problema de SSL)
             Alert.alert('Error de conexión', 'No se pudo conectar al servidor. Verifica tu internet.');
-            console.error(error); // Mostramos el error detallado en la consola para depurar
+            console.error(error);
         } finally {
-            // Finaliza la carga, reactiva el botón
             setLoading(false);
         }
     };
 
-    // RENDERIZADO DE LA INTERFAZ
     return (
         <View style={styles.container}>
-            {/* Elementos decorativos: círculos de fondo con opacidad */}
+            {/* Elementos decorativos - círculos */}
             <View style={styles.circleDecoration} />
+            <View style={[styles.circleDecoration, styles.bottomCircle]} />
 
-            {/* Logo del sindicato (desde la carpeta assets) */}
+            {/* Logo */}
             <Image
                 source={require('../assets/logo.png')}
                 style={styles.logo}
                 resizeMode="contain"
             />
 
-            {/* Tarjeta blanca que contiene el formulario */}
-            <View style={styles.card}>
-                <Text style={styles.welcomeText}>Bienvenido</Text>
+            {/* Título principal */}
+            <Text style={styles.mainTitle}>SNTSS</Text>
+            <Text style={styles.welcomeSubtitle}>¡Bienvenido! Inicie sesión para continuar</Text>
 
-                {/* Campo de texto para el usuario (matrícula) */}
+            {/* Tarjeta de login */}
+            <View style={styles.card}>
+                {/* Campo Matrícula */}
+                <Text style={styles.inputLabel}>Matrícula</Text>
                 <TextInput
-                    placeholder="Usuario"
+                    placeholder="Ingrese su matrícula"
                     placeholderTextColor="#8A9BB5"
                     style={styles.input}
                     value={usuario}
-                    onChangeText={setUsuario}            // Actualiza el estado 'usuario'
+                    onChangeText={setUsuario}
                 />
 
-                {/* Campo de texto para la contraseña (con secureTextEntry para ocultar) */}
+                {/* Campo Contraseña */}
+                <Text style={styles.inputLabel}>Contraseña</Text>
                 <TextInput
-                    placeholder="Contraseña"
+                    placeholder="Ingrese su contraseña"
                     placeholderTextColor="#8A9BB5"
                     style={styles.input}
-                    secureTextEntry                       // oculta el texto
+                    secureTextEntry
                     value={password}
-                    onChangeText={setPassword}             // Actualiza el estado 'password'
+                    onChangeText={setPassword}
                 />
 
-                {/* Botón de ingreso: se deshabilita cuando 'loading' es true */}
+                {/* Enlace olvidé contraseña */}
+                <TouchableOpacity style={styles.forgotContainer}>
+                    <Text style={styles.forgotPassword}>¿Olvidó su contraseña?</Text>
+                </TouchableOpacity>
+
+                {/* Botón Acceder */}
                 <TouchableOpacity
                     style={[styles.button, loading && styles.buttonDisabled]}
                     onPress={handleLogin}
                     disabled={loading}
                 >
                     <Text style={styles.buttonText}>
-                        {loading ? 'INGRESANDO...' : 'INGRESAR'}
+                        {loading ? 'INGRESANDO...' : 'Acceder →'}
                     </Text>
                 </TouchableOpacity>
 
-                {/* Enlace para recuperación de contraseña (aún no funcional) */}
-                <TouchableOpacity>
-                    <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
-                </TouchableOpacity>
-            </View>
+                {/* Divisor O TAMBIÉN */}
+                <View style={styles.dividerContainer}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>O TAMBIÉN</Text>
+                    <View style={styles.dividerLine} />
+                </View>
 
-            {/* Círculo decorativo inferior (dorado) */}
-            <View style={[styles.circleDecoration, styles.bottomCircle]} />
+                {/* Botón huella digital - IGUAL A LA IMAGEN */}
+                <TouchableOpacity style={styles.fingerprintButton}>
+                    <Text style={styles.fingerprintButtonText}>Ingresar con Huella Digital</Text>
+                </TouchableOpacity>
+
+                {/* Registro primer ingreso */}
+                <View style={styles.registerContainer}>
+                    <Text style={styles.registerText}>¿Es su primer ingreso? </Text>
+                    <TouchableOpacity>
+                        <Text style={styles.registerLink}>Registrarse por primera vez →</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
     );
 }
 
-// ESTILOS (colores institucionales del SNTSS)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff', // Azul marino del fondo del escudo
+        backgroundColor: '#F0F7FF',
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',
@@ -142,7 +148,7 @@ const styles = StyleSheet.create({
         width: 300,
         height: 300,
         borderRadius: 150,
-        backgroundColor: '#00a8ff', // Azul más claro
+        backgroundColor: '#00a8ff',
         top: -100,
         right: -100,
         opacity: 0.3,
@@ -152,75 +158,129 @@ const styles = StyleSheet.create({
         bottom: -100,
         left: -100,
         right: undefined,
-        backgroundColor: '#D4AF37', // Dorado del escudo
+        backgroundColor: '#D4AF37',
         opacity: 0.15,
     },
     logo: {
-        width: 180,
-        height: 180,
-        marginBottom: 30,
+        width: 120,
+        height: 120,
+        marginBottom: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 5,
-        elevation: 8, // Sombra en Android
+        elevation: 5,
+    },
+    mainTitle: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: '#003c82',
+        marginBottom: 5,
+        letterSpacing: 2,
+    },
+    welcomeSubtitle: {
+        fontSize: 16,
+        color: '#4a6fa5',
+        marginBottom: 30,
+        textAlign: 'center',
     },
     card: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 25,
+        borderRadius: 20,
         padding: 25,
         width: '100%',
         maxWidth: 400,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 15,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
     },
-    welcomeText: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#0B2A5C',
-        textAlign: 'center',
-        marginBottom: 30,
+    inputLabel: {
+        color: '#003c82',
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 5,
     },
     input: {
         backgroundColor: '#F5F8FF',
-        color: '#0B2A5C',
+        color: '#003c82',
         marginBottom: 20,
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#D4AF37', // Borde dorado
-        fontSize: 16,
+        borderColor: '#E0E8F0',
+        fontSize: 15,
+    },
+    forgotContainer: {
+        alignItems: 'flex-end',
+        marginBottom: 25,
+    },
+    forgotPassword: {
+        color: '#4a6fa5',
+        fontSize: 14,
     },
     button: {
-        backgroundColor: '#2a8adeff', // Rojo del escudo
+        backgroundColor: '#003c82',
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 10,
         alignItems: 'center',
-        marginTop: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 5,
+        marginBottom: 20,
     },
     buttonDisabled: {
-        backgroundColor: '#B22234',
-        opacity: 0.6,
+        backgroundColor: '#4a6fa5',
+        opacity: 0.7,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-        letterSpacing: 1,
+        fontSize: 16,
+        fontWeight: '600',
     },
-    forgotPassword: {
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#E0E8F0',
+    },
+    dividerText: {
         color: '#8A9BB5',
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 14,
+        paddingHorizontal: 10,
+        fontSize: 12,
         fontWeight: '500',
+    },
+    // Botón huella digital 
+    fingerprintButton: {
+        backgroundColor: '#F5F8FF',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#D4AF37',
+        borderStyle: 'dashed',
+    },
+    fingerprintButtonText: {
+        color: '#003c82',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    registerContainer: {
+        alignItems: 'center',
+    },
+    registerText: {
+        color: '#4a6fa5',
+        fontSize: 14,
+        textAlign: 'center',
+    },
+    registerLink: {
+        color: '#003c82',
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 5,
+        textDecorationLine: 'underline',
     },
 });

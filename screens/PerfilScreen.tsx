@@ -11,9 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Pantalla de perfil del usuario. Muestra los datos almacenados después del login.
 export default function PerfilScreen({ navigation }: any) {
-    // Estado para almacenar los datos del usuario recuperados de AsyncStorage
     const [userData, setUserData] = useState({
         nombre: '',
         matricula: '',
@@ -24,18 +22,14 @@ export default function PerfilScreen({ navigation }: any) {
         correo: '',
     });
 
-    // useFocusEffect se ejecuta cada vez que la pantalla obtiene el foco (al navegar a ella)
     useFocusEffect(
         React.useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    // Recupera la cadena JSON guardada bajo la clave 'userData'
                     const data = await AsyncStorage.getItem('userData');
                     if (data) {
-                        // Parsea el JSON y actualiza el estado
                         setUserData(JSON.parse(data));
                     } else {
-                        // Si no hay datos, redirige al login (sesión expirada o no iniciada)
                         navigation.replace('Login');
                     }
                 } catch (error) {
@@ -47,38 +41,28 @@ export default function PerfilScreen({ navigation }: any) {
         }, [navigation])
     );
 
-    // Función para cerrar sesión: elimina los datos guardados y navega al login
-    const handleLogout = async () => {
-        try {
-            await AsyncStorage.removeItem('userData');
-            navigation.replace('Login');
-        } catch (error) {
-            console.error('Error al cerrar sesión:', error);
-            Alert.alert('Error', 'No se pudo cerrar la sesión.');
-        }
-    };
-
     return (
         <View style={styles.container}>
-            {/* Círculos decorativos superiores e inferiores (estilo consistente con Login) */}
-            <View style={[styles.circleDecoration, styles.topCircle]} />
-            <View style={[styles.circleDecoration, styles.bottomCircle]} />
+            {/* Círculos decorativos */}
+            <View style={styles.circleDecoration1} />
+            <View style={styles.circleDecoration2} />
+            <View style={styles.circleDecoration3} />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {/* Contenedor del avatar/logo */}
                 <View style={styles.avatarContainer}>
                     <Image
-                        source={require('../assets/logo.png')} // Ruta relativa al logo (desde screens/)
+                        source={require('../assets/logo.png')}
                         style={styles.avatar}
                         resizeMode="contain"
                     />
                 </View>
 
-                {/* Mensajes de bienvenida personalizados */}
-                <Text style={styles.welcomeText}>Bienvenido,</Text>
+                {/* Mensajes de bienvenida */}
+                <Text style={styles.welcomeText}>Perfil de Usuario</Text>
                 <Text style={styles.nameText}>{userData.nombre || 'Compañero'}</Text>
 
-                {/* Tarjeta que muestra los datos del usuario */}
+                {/* Tarjeta de datos */}
                 <View style={styles.card}>
                     <View style={styles.infoRow}>
                         <Text style={styles.label}>Matrícula:</Text>
@@ -104,94 +88,109 @@ export default function PerfilScreen({ navigation }: any) {
                         <Text style={styles.label}>Correo:</Text>
                         <Text style={styles.value}>{userData.correo}</Text>
                     </View>
-                    {/* Puedes agregar más campos si la API los envía y los guardas en AsyncStorage */}
                 </View>
 
-                {/* Botón para cerrar sesión */}
-                <TouchableOpacity style={styles.button} onPress={handleLogout}>
-                    <Text style={styles.buttonText}>CERRAR SESIÓN</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.button, { marginTop: 10, backgroundColor: '#0B2A5C' }]}
-                    onPress={() => navigation.navigate('Scanner')}
+                {/* Botón de Regreso Único */}
+                <TouchableOpacity 
+                    style={styles.button} 
+                    onPress={() => navigation.navigate('Panel')}
                 >
-                    <Text style={styles.buttonText}>PROBAR ESCÁNER</Text>
+                    <Text style={styles.buttonText}>REGRESAR AL PANEL</Text>
                 </TouchableOpacity>
+                
             </ScrollView>
         </View>
     );
 }
 
-// Hoja de estilos (consistente con la paleta de colores del sindicato)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc', // Azul marino institucional
+        backgroundColor: '#F0F7FF',
     },
-    // Decoraciones circulares (fondo)
-    circleDecoration: {
+    circleDecoration1: {
         position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: '#003c82',
+        top: -150,
+        right: -150,
+        opacity: 0.08,
+    },
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
         backgroundColor: '#00a8ff',
-        opacity: 0.3,
+        bottom: -120,
+        left: -120,
+        opacity: 0.08,
     },
-    topCircle: {
-        top: -100,
-        right: -100,
-    },
-    bottomCircle: {
-        bottom: -100,
-        left: -100,
-        backgroundColor: '#D4AF37', // Dorado con opacidad
-        opacity: 0.15,
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        backgroundColor: '#1B476A',
+        bottom: 100,
+        right: -80,
+        opacity: 0.05,
     },
     scrollContent: {
         flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 40,
+        paddingVertical: 60, // Aumentado para dar aire
         paddingHorizontal: 20,
     },
     avatarContainer: {
         marginBottom: 20,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(255,255,255,0.9)',
         borderRadius: 100,
         padding: 10,
+        shadowColor: '#003c82',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 8,
     },
     avatar: {
         width: 120,
         height: 120,
         borderRadius: 60,
         borderWidth: 2,
-        borderColor: '#D4AF37',
+        borderColor: '#003c82',
     },
     welcomeText: {
-        fontSize: 24,
-        color: '#FFFFFF',
+        fontSize: 20,
+        color: '#4a6fa5',
         fontWeight: '300',
         textAlign: 'center',
     },
     nameText: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#D4AF37',
+        color: '#003c82',
         textAlign: 'center',
         marginBottom: 30,
+        paddingHorizontal: 10,
     },
     card: {
         backgroundColor: '#FFFFFF',
         borderRadius: 20,
-        padding: 20,
+        padding: 25,
         width: '100%',
         maxWidth: 400,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
+        shadowColor: '#003c82',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 15,
         elevation: 8,
         marginBottom: 30,
+        borderWidth: 1,
+        borderColor: 'rgba(0, 60, 130, 0.1)',
     },
     infoRow: {
         flexDirection: 'row',
@@ -199,38 +198,38 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: '#E0E8F0',
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        color: '#0B2A5C',
+        color: '#003c82',
     },
     value: {
-        fontSize: 16,
-        color: '#333333',
+        fontSize: 14,
+        color: '#4a6fa5',
         fontWeight: '500',
         flexShrink: 1,
         textAlign: 'right',
         marginLeft: 10,
     },
     button: {
-        backgroundColor: '#B22234', // Rojo institucional
+        backgroundColor: '#003c82',
         paddingHorizontal: 40,
         paddingVertical: 15,
-        borderRadius: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 5,
+        borderRadius: 25,
+        shadowColor: '#003c82',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
         width: '100%',
         maxWidth: 300,
         alignSelf: 'center',
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: 'bold',
         textAlign: 'center',
         letterSpacing: 1,

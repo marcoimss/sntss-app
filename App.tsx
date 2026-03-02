@@ -5,9 +5,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
 import PerfilScreen from './screens/PerfilScreen';
 import PanelScreen from './screens/PanelScreen';
-import Loader from './components/Loader/Loader'; 
+import Loader from './components/Loader/Loader';
 import Tarjeta from './components/Tarjeta';
 import ScannerScreen from './screens/ScannerScreen';
+import BusquedaScreen from './screens/BusquedaScreen';
+import ConfirmacionScreen from './screens/ConfirmacionScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +56,8 @@ export default function App() {
         <Stack.Screen name="Panel" component={PanelScreen} />
         <Stack.Screen name="Perfil" component={PerfilScreen} />
         <Stack.Screen name="Scanner" component={ScannerScreen} />
+        <Stack.Screen name="Busqueda" component={BusquedaScreen} />
+        <Stack.Screen name="Confirmacion" component={ConfirmacionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

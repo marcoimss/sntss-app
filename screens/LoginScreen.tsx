@@ -119,16 +119,17 @@ export default function LoginScreen({ navigation }: any) {
                 </View>
 
                 {/* Botón huella digital - IGUAL A LA IMAGEN */}
-                <TouchableOpacity style={styles.fingerprintButton}>
+                {/* <TouchableOpacity style={styles.fingerprintButton}>
                     <Text style={styles.fingerprintButtonText}>Ingresar con Huella Digital</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 {/* Registro primer ingreso */}
                 <View style={styles.registerContainer}>
                     <Text style={styles.registerText}>¿Es su primer ingreso? </Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('Busqueda')}>
                         <Text style={styles.registerLink}>Registrarse por primera vez →</Text>
                     </TouchableOpacity>
+
                 </View>
             </View>
         </View>

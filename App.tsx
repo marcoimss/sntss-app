@@ -1,41 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
 import PerfilScreen from './screens/PerfilScreen';
 import PanelScreen from './screens/PanelScreen';
 import Loader from './components/Loader/Loader';
-import Tarjeta from './components/Tarjeta';
 import ScannerScreen from './screens/ScannerScreen';
 import BusquedaScreen from './screens/BusquedaScreen';
 import ConfirmacionScreen from './screens/ConfirmacionScreen';
+import CalculadoraHipotecario from './screens/CalculadoraHipotecario';
+import CalculadoraMedianoPlazo from './screens/CalculadoraMedianoPlazo';
+import CalculadoraAguinaldo from './screens/CalculadoraAguinaldo';
+import CalculadoraAuto from './screens/CalculadoraAuto';
+import Calculadora2Julio from './screens/Calculadora2Julio';
 
 const Stack = createNativeStackNavigator();
-
-function HomeScreen({ navigation }: any) {
-  return (
-    <View style={styles.container}>
-      <View style={styles.circleDecoration1} />
-      <View style={styles.circleDecoration2} />
-      <View style={styles.circleDecoration3} />
-      <Image
-        source={require('./assets/logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-      <Text style={styles.mainTitle}>SNTSS</Text>
-      <Text style={styles.welcomeSubtitle}>Bienvenido a la plataforma sindical</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Login')}
-      >
-        <Text style={styles.buttonText}>INICIAR SESIÓN</Text>
-      </TouchableOpacity>
-      <Text style={styles.footerText}>Sindicato Nacional de Trabajadores del Seguro Social</Text>
-    </View>
-  );
-}
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -51,13 +31,17 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Panel" component={PanelScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Perfil" component={PerfilScreen} />
         <Stack.Screen name="Scanner" component={ScannerScreen} />
         <Stack.Screen name="Busqueda" component={BusquedaScreen} />
         <Stack.Screen name="Confirmacion" component={ConfirmacionScreen} />
+        <Stack.Screen name="CalculadoraHipotecario" component={CalculadoraHipotecario} />
+        <Stack.Screen name="CalculadoraMedianoPlazo" component={CalculadoraMedianoPlazo} />
+        <Stack.Screen name="CalculadoraAguinaldo" component={CalculadoraAguinaldo} />
+        <Stack.Screen name="CalculadoraAuto" component={CalculadoraAuto} />
+        <Stack.Screen name="Calculadora2Julio" component={Calculadora2Julio} />
       </Stack.Navigator>
     </NavigationContainer>
   );

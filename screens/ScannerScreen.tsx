@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, PermissionsAndroid, DeviceEventEmitter } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, PermissionsAndroid, DeviceEventEmitter, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRScanner from 'react-native-qr-scanner-advanced';
 
@@ -124,12 +124,12 @@ export default function ScannerScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F7FF', // Mismo fondo que las demás pantallas
+        backgroundColor: '#F0F7FF',
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    // Círculos decorativos - exactamente como en App y Login
+    // Círculos decorativos - exactamente como en Panel
     circleDecoration1: {
         position: 'absolute',
         width: 400,
@@ -166,11 +166,18 @@ const styles = StyleSheet.create({
         padding: 30,
         width: '100%',
         maxWidth: 400,
-        shadowColor: '#003c82',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.1,
-        shadowRadius: 15,
-        elevation: 8,
+        // Misma sombra que Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.1,
+                shadowRadius: 15,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
         borderWidth: 1,
         borderColor: 'rgba(0, 60, 130, 0.1)',
         alignItems: 'center',
@@ -224,11 +231,18 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
         marginBottom: 12,
-        shadowColor: '#003c82',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        // Misma sombra que Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
     },
     buttonText: {
         color: '#FFFFFF',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }: any) {
@@ -57,9 +57,10 @@ export default function LoginScreen({ navigation }: any) {
 
     return (
         <View style={styles.container}>
-            {/* Elementos decorativos - círculos */}
-            <View style={styles.circleDecoration} />
-            <View style={[styles.circleDecoration, styles.bottomCircle]} />
+            {/* Elementos decorativos - círculos como en Panel */}
+            <View style={styles.circleDecoration1} />
+            <View style={styles.circleDecoration2} />
+            <View style={styles.circleDecoration3} />
 
             {/* Logo */}
             <Image
@@ -100,7 +101,7 @@ export default function LoginScreen({ navigation }: any) {
                     <Text style={styles.forgotPassword}>¿Olvidó su contraseña?</Text>
                 </TouchableOpacity>
 
-                {/* Botón Acceder */}
+                {/* Botón Acceder - con sombra azul como Panel */}
                 <TouchableOpacity
                     style={[styles.button, loading && styles.buttonDisabled]}
                     onPress={handleLogin}
@@ -118,7 +119,7 @@ export default function LoginScreen({ navigation }: any) {
                     <View style={styles.dividerLine} />
                 </View>
 
-                {/* Botón huella digital - IGUAL A LA IMAGEN */}
+                {/* Botón huella digital - comentado como estaba */}
                 {/* <TouchableOpacity style={styles.fingerprintButton}>
                     <Text style={styles.fingerprintButtonText}>Ingresar con Huella Digital</Text>
                 </TouchableOpacity> */}
@@ -129,7 +130,6 @@ export default function LoginScreen({ navigation }: any) {
                     <TouchableOpacity onPress={() => navigation.navigate('Busqueda')}>
                         <Text style={styles.registerLink}>Registrarse por primera vez →</Text>
                     </TouchableOpacity>
-
                 </View>
             </View>
         </View>
@@ -144,29 +144,42 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    circleDecoration: {
+    // Círculos decorativos - mismos que en Panel
+    circleDecoration1: {
         position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: '#00a8ff',
-        top: -100,
-        right: -100,
-        opacity: 0.3,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: '#003c82',
+        top: -150,
+        right: -150,
+        opacity: 0.08,
     },
-    bottomCircle: {
-        top: undefined,
-        bottom: -100,
-        left: -100,
-        right: undefined,
-        backgroundColor: '#D4AF37',
-        opacity: 0.15,
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
+        backgroundColor: '#00a8ff',
+        bottom: -120,
+        left: -120,
+        opacity: 0.08,
+    },
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        backgroundColor: '#1B476A',
+        bottom: 100,
+        right: -80,
+        opacity: 0.05,
     },
     logo: {
         width: 120,
         height: 120,
         marginBottom: 10,
-        shadowColor: '#000',
+        shadowColor: '#003c82', // Sombra azul institucional
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
@@ -191,11 +204,18 @@ const styles = StyleSheet.create({
         padding: 25,
         width: '100%',
         maxWidth: 400,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        // Sombra azul suave como en Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 10,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
     },
     inputLabel: {
         color: '#003c82',
@@ -227,6 +247,18 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         marginBottom: 20,
+        // Sombra azul como en Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
     },
     buttonDisabled: {
         backgroundColor: '#4a6fa5',
@@ -253,7 +285,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
     },
-    // Botón huella digital 
     fingerprintButton: {
         backgroundColor: '#F5F8FF',
         padding: 15,

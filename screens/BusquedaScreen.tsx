@@ -7,7 +7,8 @@ import {
     StyleSheet,
     Alert,
     ScrollView,
-    ActivityIndicator
+    ActivityIndicator,
+    Platform
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
@@ -75,8 +76,10 @@ export default function BusquedaScreen({ navigation }: any) {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <View style={styles.circleDecoration} />
-            <View style={[styles.circleDecoration, styles.bottomCircle]} />
+            {/* Círculos decorativos - 3 como en Panel */}
+            <View style={styles.circleDecoration1} />
+            <View style={styles.circleDecoration2} />
+            <View style={styles.circleDecoration3} />
 
             <Text style={styles.mainTitle}>Registro SNTSS</Text>
             <Text style={styles.welcomeSubtitle}>Primer ingreso - Verifica tus datos</Text>
@@ -148,23 +151,36 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    circleDecoration: {
+    // Círculos decorativos - 3 como en Panel
+    circleDecoration1: {
         position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: '#00a8ff',
-        top: -100,
-        right: -100,
-        opacity: 0.3,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: '#003c82',
+        top: -150,
+        right: -150,
+        opacity: 0.08,
     },
-    bottomCircle: {
-        top: undefined,
-        bottom: -100,
-        left: -100,
-        right: undefined,
-        backgroundColor: '#D4AF37',
-        opacity: 0.15,
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
+        backgroundColor: '#00a8ff',
+        bottom: -120,
+        left: -120,
+        opacity: 0.08,
+    },
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        backgroundColor: '#1B476A',
+        bottom: 100,
+        right: -80,
+        opacity: 0.05,
     },
     mainTitle: {
         fontSize: 32,
@@ -186,11 +202,20 @@ const styles = StyleSheet.create({
         padding: 25,
         width: '100%',
         maxWidth: 400,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        // Sombra azul como en Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.1,
+                shadowRadius: 15,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
+        borderWidth: 1,
+        borderColor: 'rgba(0, 60, 130, 0.1)',
     },
     inputLabel: {
         color: '#003c82',
@@ -227,6 +252,18 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         marginTop: 20,
+        // Sombra azul como en Panel
+        ...Platform.select({
+            ios: {
+                shadowColor: '#003c82',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
     },
     buttonDisabled: {
         backgroundColor: '#4a6fa5',

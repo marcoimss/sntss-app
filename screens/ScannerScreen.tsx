@@ -1,12 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, PermissionsAndroid, DeviceEventEmitter, Platform } from 'react-native';
+// @ts-nocheck
+import React, { useEffect, useState, useMemo } from 'react';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Alert,
+    PermissionsAndroid,
+    DeviceEventEmitter,
+    Platform,
+    Dimensions,
+    SafeAreaView,
+    StatusBar
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRScanner from 'react-native-qr-scanner-advanced';
+import { useTheme } from '../context/ThemeContext';
+import { ArrowLeft, QrCode, LogIn, LogOut, User, Home, Camera } from 'lucide-react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export default function ScannerScreen({ navigation }: any) {
+    const { colors, theme } = useTheme();
     const [encargado, setEncargado] = useState({ matricula: '', nombre: '' });
     const [scanned, setScanned] = useState(false);
     const [tipo, setTipo] = useState('entrada');
+
+    // PARTÍCULAS GALÁCTICAS
+    const particles = useMemo(() => 
+        Array.from({ length: 60 }).map((_, i) => ({
+            key: i,
+            left: Math.random() * width,
+            top: Math.random() * height,
+            size: Math.random() * 3 + 1,
+            color: colors.particleColors[i % colors.particleColors.length],
+            opacity: Math.random() * 0.5 + 0.2,
+        })), [colors.particleColors]
+    );
 
     useEffect(() => {
         const loadEncargado = async () => {
@@ -60,63 +90,182 @@ export default function ScannerScreen({ navigation }: any) {
     }, [encargado, scanned, tipo]);
 
     const solicitarPermisoYEscaneo = async () => {
-        try {
-            const granted = await PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.CAMERA,
-                {
-                    title: 'Permiso de cámara',
-                    message: 'La app necesita acceso a la cámara para escanear QR',
-                    buttonNeutral: 'Preguntar después',
-                    buttonNegative: 'Cancelar',
-                    buttonPositive: 'Aceptar',
+        if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.CAMERA,
+                    {
+                        title: 'Permiso de cámara',
+                        message: 'La app necesita acceso a la cámara para escanear QR',
+                        buttonNeutral: 'Preguntar después',
+                        buttonNegative: 'Cancelar',
+                        buttonPositive: 'Aceptar',
+                    }
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    setScanned(false);
+                    QRScanner.openScanner();
+                } else {
+                    Alert.alert('Permiso denegado', 'No podemos escanear sin la cámara');
                 }
-            );
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                setScanned(false);
-                QRScanner.openScanner();
-            } else {
-                Alert.alert('Permiso denegado', 'No podemos escanear sin la cámara');
+            } catch (err) {
+                console.warn(err);
             }
-        } catch (err) {
-            console.warn(err);
+        } else {
+            setScanned(false);
+            QRScanner.openScanner();
         }
     };
 
+    const handleGoBack = () => {
+        navigation.goBack();
+    };
+
+    const handleGoToPanel = () => {
+        navigation.navigate('Panel');
+    };
+
     return (
-        <View style={styles.container}>
-            {/* Círculos decorativos - estilo consistente */}
-            <View style={styles.circleDecoration1} />
-            <View style={styles.circleDecoration2} />
-            <View style={styles.circleDecoration3} />
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            {/* PARTÍCULAS GALÁCTICAS */}
+            <View style={StyleSheet.absoluteFillObject}>
+                {particles.map((p) => (
+                    <View
+                        key={p.key}
+                        style={{
+                            position: 'absolute',
+                            left: p.left,
+                            top: p.top,
+                            width: p.size,
+                            height: p.size,
+                            borderRadius: p.size / 2,
+                            backgroundColor: p.color,
+                            opacity: p.opacity,
+                        }}
+                    />
+                ))}
+            </View>
 
-            <View style={styles.card}>
-                <Text style={styles.title}>Registro de Asistencia</Text>
-                <Text style={styles.subtitle}>Encargado: {encargado.nombre || 'Cargando...'}</Text>
+            {/* CÍRCULOS DECORATIVOS DINÁMICOS */}
+            <View style={[styles.circleDecoration1, { backgroundColor: colors.circle1 }]} />
+            <View style={[styles.circleDecoration2, { backgroundColor: colors.circle2 }]} />
+            <View style={[styles.circleDecoration3, { backgroundColor: colors.circle3 }]} />
 
-                {/* Botones para seleccionar tipo */}
-                <View style={styles.tipoContainer}>
-                    <TouchableOpacity
-                        style={[styles.tipoButton, tipo === 'entrada' && styles.tipoActivo]}
-                        onPress={() => setTipo('entrada')}>
-                        <Text style={[styles.tipoText, tipo === 'entrada' && styles.tipoTextActivo]}>Entrada</Text>
+            <SafeAreaView style={styles.safeArea}>
+                <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
+
+                {/* HEADER CON BOTONES */}
+                <View style={styles.header}>
+                    <TouchableOpacity 
+                        onPress={handleGoBack}
+                        style={[
+                            styles.backButton,
+                            { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                        ]}
+                    >
+                        <ArrowLeft color={colors.textPrimary} size={24} />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tipoButton, tipo === 'salida' && styles.tipoActivo]}
-                        onPress={() => setTipo('salida')}>
-                        <Text style={[styles.tipoText, tipo === 'salida' && styles.tipoTextActivo]}>Salida</Text>
+                    <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+                        Escáner QR
+                    </Text>
+                    <TouchableOpacity 
+                        onPress={handleGoToPanel}
+                        style={[
+                            styles.homeButton,
+                            { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                        ]}
+                    >
+                        <Home color={colors.textPrimary} size={22} />
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.button} onPress={solicitarPermisoYEscaneo}>
-                    <Text style={styles.buttonText}>Abrir Escáner</Text>
-                </TouchableOpacity>
+                <View style={styles.cardContainer}>
+                    <View style={[styles.card, { backgroundColor: colors.card }]}>
+                        {/* Icono de QR */}
+                        <View style={[styles.qrIconContainer, { backgroundColor: colors.textPrimary  + '20' }]}>
+                            <QrCode color={colors.textPrimary } size={48} />
+                        </View>
 
-                <TouchableOpacity 
-                    style={styles.secondaryButton}
-                    onPress={() => navigation.goBack()}>
-                    <Text style={styles.secondaryButtonText}>Regresar</Text>
-                </TouchableOpacity>
-            </View>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Registro de Asistencia</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                            <User size={14} color={colors.textSecondary} /> Encargado: {encargado.nombre || 'Cargando...'}
+                        </Text>
+
+                        {/* Botones para seleccionar tipo */}
+                        <View style={styles.tipoContainer}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.tipoButton, 
+                                    { 
+                                        backgroundColor: tipo === 'entrada' ? colors.cardAccent : colors.cardAccent + '20',
+                                        borderColor: colors.cardAccent 
+                                    }
+                                ]}
+                                onPress={() => setTipo('entrada')}
+                            >
+                                <LogIn 
+                                    size={18} 
+                                    color={tipo === 'entrada' ? '#FFF' : colors.cardAccent} 
+                                />
+                                <Text style={[
+                                    styles.tipoText, 
+                                    { 
+                                        color: tipo === 'entrada' ? '#FFF' : colors.cardAccent,
+                                        fontWeight: tipo === 'entrada' ? 'bold' : '500'
+                                    }
+                                ]}>
+                                    Entrada
+                                </Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                                style={[
+                                    styles.tipoButton, 
+                                    { 
+                                        backgroundColor: tipo === 'salida' ? colors.cardAccent : colors.cardAccent + '20',
+                                        borderColor: colors.cardAccent 
+                                    }
+                                ]}
+                                onPress={() => setTipo('salida')}
+                            >
+                                <LogOut 
+                                    size={18} 
+                                    color={tipo === 'salida' ? '#FFF' : colors.textPrimary } 
+                                />
+                                <Text style={[
+                                    styles.tipoText, 
+                                    { 
+                                        color: tipo === 'salida' ? '#FFF' : colors.textPrimary ,
+                                        fontWeight: tipo === 'salida' ? 'bold' : '500'
+                                    }
+                                ]}>
+                                    Salida
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Botón Abrir Escáner */}
+                        <TouchableOpacity 
+                            style={[styles.button, { backgroundColor: colors.cardAccent }]} 
+                            onPress={solicitarPermisoYEscaneo}
+                        >
+                            <Camera color="#FFF" size={20} />
+                            <Text style={styles.buttonText}>Abrir Escáner</Text>
+                        </TouchableOpacity>
+
+                        {/* Botón Regresar */}
+                        <TouchableOpacity 
+                            style={[styles.secondaryButton, { borderColor: colors.cardAccent }]}
+                            onPress={handleGoBack}
+                        >
+                            <ArrowLeft color={colors.textPrimary } size={18} />
+                            <Text style={[styles.secondaryButtonText, { color: colors.textPrimary  }]}>
+                                Regresar
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </SafeAreaView>
         </View>
     );
 }
@@ -124,114 +273,113 @@ export default function ScannerScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F7FF',
-        padding: 20,
+    },
+    safeArea: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: Platform.OS === 'android' ? 40 : 20,
+        paddingBottom: 20,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    // Círculos decorativos - exactamente como en Panel
-    circleDecoration1: {
-        position: 'absolute',
-        width: 400,
-        height: 400,
-        borderRadius: 200,
-        backgroundColor: '#003c82',
-        top: -150,
-        right: -150,
-        opacity: 0.08,
+    homeButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    circleDecoration2: {
-        position: 'absolute',
-        width: 350,
-        height: 350,
-        borderRadius: 175,
-        backgroundColor: '#00a8ff',
-        bottom: -120,
-        left: -120,
-        opacity: 0.08,
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
     },
-    circleDecoration3: {
-        position: 'absolute',
-        width: 250,
-        height: 250,
-        borderRadius: 125,
-        backgroundColor: '#1B476A',
-        bottom: 100,
-        right: -80,
-        opacity: 0.05,
+    cardContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 40,
     },
     card: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 25,
         padding: 30,
         width: '100%',
         maxWidth: 400,
-        // Misma sombra que Panel
+        alignItems: 'center',
         ...Platform.select({
             ios: {
-                shadowColor: '#003c82',
-                shadowOffset: { width: 0, height: 6 },
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
-                shadowRadius: 15,
+                shadowRadius: 8,
             },
             android: {
-                elevation: 8,
+                elevation: 4,
             },
         }),
-        borderWidth: 1,
-        borderColor: 'rgba(0, 60, 130, 0.1)',
+    },
+    qrIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 20,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#003c82',
         marginBottom: 10,
         textAlign: 'center',
     },
     subtitle: {
-        fontSize: 16,
-        color: '#4a6fa5',
+        fontSize: 14,
         marginBottom: 25,
         textAlign: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     tipoContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         width: '100%',
         marginBottom: 30,
+        gap: 12,
     },
     tipoButton: {
         flex: 1,
-        paddingVertical: 12,
-        marginHorizontal: 5,
-        borderRadius: 10,
-        backgroundColor: '#F5F8FF',
-        borderWidth: 1,
-        borderColor: '#003c82',
+        flexDirection: 'row',
         alignItems: 'center',
-    },
-    tipoActivo: {
-        backgroundColor: '#003c82',
-        borderColor: '#003c82',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 1,
     },
     tipoText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        color: '#003c82',
-    },
-    tipoTextActivo: {
-        color: '#FFFFFF',
     },
     button: {
-        backgroundColor: '#003c82',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
         paddingHorizontal: 30,
-        paddingVertical: 15,
+        paddingVertical: 14,
         borderRadius: 25,
         width: '100%',
-        alignItems: 'center',
         marginBottom: 12,
-        // Misma sombra que Panel
         ...Platform.select({
             ios: {
                 shadowColor: '#003c82',
@@ -240,7 +388,7 @@ const styles = StyleSheet.create({
                 shadowRadius: 8,
             },
             android: {
-                elevation: 8,
+                elevation: 6,
             },
         }),
     },
@@ -251,20 +399,49 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     secondaryButton: {
-        backgroundColor: '#F5F8FF',
-        paddingHorizontal: 30,
-        paddingVertical: 15,
-        borderRadius: 25,
-        borderWidth: 2,
-        borderColor: '#003c82',
-        borderStyle: 'dashed',
-        width: '100%',
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingHorizontal: 30,
+        paddingVertical: 12,
+        borderRadius: 25,
+        borderWidth: 1.5,
+        width: '100%',
+        backgroundColor: 'transparent',
     },
     secondaryButtonText: {
-        color: '#003c82',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         letterSpacing: 1,
+    },
+
+    // CÍRCULOS DECORATIVOS
+    circleDecoration1: {
+        position: 'absolute',
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        top: -150,
+        right: -150,
+        opacity: 0.1,
+    },
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
+        bottom: -120,
+        left: -120,
+        opacity: 0.1,
+    },
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        bottom: 100,
+        right: -80,
+        opacity: 0.07,
     },
 });

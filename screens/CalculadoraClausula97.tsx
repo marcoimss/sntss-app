@@ -13,16 +13,15 @@ import {
     Dimensions
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Gift, Calculator, Info } from 'lucide-react-native';
+import { ArrowLeft, Banknote, Calculator, Award } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function CalculadoraAguinaldo({ navigation }: any) {
+export default function CalculadoraClausula97({ navigation }: any) {
     const { colors, theme } = useTheme();
 
     const [c02, setC02] = useState('');
     const [c11, setC11] = useState('');
-    const [dias, setDias] = useState('365');
     const [resultados, setResultados] = useState<any>(null);
 
     // PARTÍCULAS GALÁCTICAS
@@ -40,37 +39,32 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
     const calcular = () => {
         const val02 = parseFloat(c02);
         const val11 = parseFloat(c11);
-        let valDias = parseFloat(dias);
 
         if (isNaN(val02) || isNaN(val11)) {
-            Alert.alert('Error', 'Por favor, ingresa los conceptos 002 y 011');
+            Alert.alert('Error', 'Por favor, ingresa ambos conceptos (002 y 011)');
             return;
         }
 
-        // Validación de días (máximo 365)
-        if (isNaN(valDias) || valDias <= 0 || valDias > 365) {
-            valDias = 365;
-        }
+        // Lógica: baseMensual = (c02 + c11) * 2
+        const baseMensual = (val02 + val11) * 2;
 
-        const factorProporcional = valDias / 365;
-
-        // 🔥 NUEVA FÓRMULA IMSS
-        // baseQuincenal = (c02 + (c11 * 2)) * 0.8215
-        const baseQuincenal = (val02 + (val11 * 2)) * 0.8215;
-        const baseMensual = baseQuincenal * 2;
-        const valorDiario = baseMensual / 30;
-
-        // Cálculo por periodos con proporcionalidad aplicada
         setResultados({
-            enero: (valorDiario * 15) * factorProporcional,
-            agosto: (valorDiario * 30) * factorProporcional,
-            diciembreCon: (valorDiario * 45) * factorProporcional,
-            diciembreSin: (valorDiario * 75) * factorProporcional,
+            mes1: baseMensual * 1,
+            mes2: baseMensual * 2,
+            mes3: baseMensual * 3,
+            mes4: baseMensual * 4,
         });
     };
 
     const format = (val: number) => 
         new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+
+    const niveles = [
+        { label: '1 Mes', value: 'mes1', icon: '1️⃣', color: '#003c82' },
+        { label: '2 Meses', value: 'mes2', icon: '2️⃣', color: '#1B476A' },
+        { label: '3 Meses', value: 'mes3', icon: '3️⃣', color: '#2a8ade' },
+        { label: '4 Meses', value: 'mes4', icon: '4️⃣', color: '#00a8ff' },
+    ];
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -106,27 +100,24 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <ArrowLeft color={colors.textPrimary} size={24} />
                     </TouchableOpacity>
-                    <Text style={[styles.title, { color: colors.textPrimary }]}>Aguinaldo</Text>
+                    <Text style={[styles.title, { color: colors.textPrimary }]}>Cláusula 97</Text>
                     <View style={{ width: 40 }} />
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={[styles.card, { backgroundColor: colors.card }]}>
                         <View style={[styles.cardHeader, { backgroundColor: colors.cardAccent }]}>
-                            <Gift color="#FFF" size={24} />
-                            <Text style={styles.cardTitle}>Aguinaldo (Concepto 049)</Text>
+                            <Banknote color="#FFF" size={24} />
+                            <Text style={styles.cardTitle}>Préstamos Cláusula 97</Text>
                         </View>
 
                         <View style={styles.cardBody}>
-                            <View style={[styles.alertBox, { backgroundColor: colors.cardAccent + '20' }]}>
-                                <Info color={colors.cardAccent} size={16} />
-                                <Text style={[styles.alertText, { color: colors.textSecondary }]}>
-                                    Nota: Faltas, licencias e incidencias modifican el monto final.
-                                </Text>
-                            </View>
+                            <Text style={[styles.description, { color: colors.textSecondary }]}>
+                                Calcula los montos disponibles para préstamos de 1 a 4 meses de sueldo base.
+                            </Text>
 
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 002:</Text>
+                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 002 (Sueldo):</Text>
                                 <TextInput
                                     style={[
                                         styles.input,
@@ -136,7 +127,7 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                             color: colors.textPrimary
                                         }
                                     ]}
-                                    placeholder="Ej: 2437.73"
+                                    placeholder="$ 0.00"
                                     placeholderTextColor={colors.textSecondary}
                                     keyboardType="numeric"
                                     value={c02}
@@ -145,7 +136,7 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                             </View>
 
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 011:</Text>
+                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 011 (Ayuda):</Text>
                                 <TextInput
                                     style={[
                                         styles.input,
@@ -155,7 +146,7 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                             color: colors.textPrimary
                                         }
                                     ]}
-                                    placeholder="Ej: 2002.60"
+                                    placeholder="$ 0.00"
                                     placeholderTextColor={colors.textSecondary}
                                     keyboardType="numeric"
                                     value={c11}
@@ -163,68 +154,36 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                 />
                             </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Días trabajados (opcional):</Text>
-                                <TextInput
-                                    style={[
-                                        styles.input,
-                                        {
-                                            backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#F5F8FF',
-                                            borderColor: theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E0E8F0',
-                                            color: colors.textPrimary
-                                        }
-                                    ]}
-                                    placeholder="365"
-                                    placeholderTextColor={colors.textSecondary}
-                                    keyboardType="numeric"
-                                    value={dias}
-                                    onChangeText={setDias}
-                                />
-                                <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-                                    Si no sabes tus incidencias, deja 365.
-                                </Text>
-                            </View>
-
                             <TouchableOpacity
                                 style={[styles.button, { backgroundColor: colors.cardAccent }]}
                                 onPress={calcular}
                             >
                                 <Calculator color="#FFF" size={20} />
-                                <Text style={styles.buttonText}>Calcular Aguinaldo</Text>
+                                <Text style={styles.buttonText}>Calcular Niveles</Text>
                             </TouchableOpacity>
 
                             {resultados && (
-                                <View style={styles.resultContainer}>
-                                    <Text style={[styles.resultHeader, { color: colors.textPrimary }]}>Montos Estimados:</Text>
-                                    
-                                    <ResultRow 
-                                        label="Anticipo Enero (15d)" 
-                                        value={format(resultados.enero)} 
-                                        color="#6c757d"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Adelanto Agosto (30d)" 
-                                        value={format(resultados.agosto)} 
-                                        color="#6aa5e9"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Dic. (Con Adelanto)" 
-                                        value={format(resultados.diciembreCon)} 
-                                        color="#00a8ff"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Dic. (Sin Adelanto)" 
-                                        value={format(resultados.diciembreSin)} 
-                                        color="#28a745"
-                                        theme={theme}
-                                    />
-
-                                    <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
-                                        *Cálculo proporcional basado en {dias} días.
-                                    </Text>
+                                <View style={styles.resultsGrid}>
+                                    {niveles.map((nivel) => (
+                                        <View
+                                            key={nivel.value}
+                                            style={[
+                                                styles.resCard,
+                                                {
+                                                    backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F8F9FA',
+                                                    borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E9ECEF'
+                                                }
+                                            ]}
+                                        >
+                                            <View style={styles.resHeader}>
+                                                <Text style={styles.resIcon}>{nivel.icon}</Text>
+                                                <Text style={[styles.resLabel, { color: colors.textSecondary }]}>{nivel.label}</Text>
+                                            </View>
+                                            <Text style={[styles.resValue, { color: colors.textSecondary }]}>
+                                                {format(resultados[nivel.value])}
+                                            </Text>
+                                        </View>
+                                    ))}
                                 </View>
                             )}
                         </View>
@@ -234,14 +193,6 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
         </View>
     );
 }
-
-// Sub-componente para cada fila de resultado
-const ResultRow = ({ label, value, color, theme }: any) => (
-    <View style={[styles.resRow, { borderLeftColor: color, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F8F9FA' }]}>
-        <Text style={[styles.resLabel, { color: theme === 'dark' ? '#FFF' : '#555' }]}>{label}</Text>
-        <Text style={[styles.resValue, { color: color }]}>{value}</Text>
-    </View>
-);
 
 const styles = StyleSheet.create({
     container: {
@@ -303,17 +254,11 @@ const styles = StyleSheet.create({
     cardBody: {
         padding: 20,
     },
-    alertBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        borderRadius: 12,
+    description: {
+        textAlign: 'center',
         marginBottom: 20,
-        gap: 8,
-    },
-    alertText: {
         fontSize: 13,
-        flex: 1,
+        lineHeight: 18,
     },
     inputGroup: {
         marginBottom: 15,
@@ -329,10 +274,6 @@ const styles = StyleSheet.create({
         padding: 14,
         fontSize: 16,
     },
-    helperText: {
-        fontSize: 11,
-        marginTop: 4,
-    },
     button: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -347,36 +288,37 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-    resultContainer: {
-        marginTop: 25,
-    },
-    resultHeader: {
-        textAlign: 'center',
-        fontWeight: 'bold',
-        marginBottom: 15,
-        fontSize: 14,
-    },
-    resRow: {
+    resultsGrid: {
+        marginTop: 20,
         flexDirection: 'row',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
+        gap: 12,
+    },
+    resCard: {
+        width: '48%',
         padding: 12,
-        borderRadius: 10,
-        marginBottom: 8,
-        borderLeftWidth: 5,
+        borderRadius: 12,
+        borderWidth: 1,
+        alignItems: 'center',
+    },
+    resHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+        gap: 4,
+    },
+    resIcon: {
+        fontSize: 16,
     },
     resLabel: {
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     resValue: {
         fontSize: 15,
         fontWeight: 'bold',
-    },
-    footerNote: {
-        fontSize: 11,
-        textAlign: 'center',
-        marginTop: 10,
-        fontStyle: 'italic',
+        marginTop: 4,
     },
 
     // CÍRCULOS DECORATIVOS

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,8 @@ import {
     Alert,
     SafeAreaView,
     StatusBar,
-    Platform
+    Platform,
+    Dimensions
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,7 +21,6 @@ import {
     Calendar, 
     Calculator, 
     QrCode, 
-    ChevronRight,
     LogOut,
     User,
     Home,
@@ -28,15 +28,32 @@ import {
     Settings,
     CreditCard,
     Car,
-    TrendingUp
+    TrendingUp,
+    Download
 } from 'lucide-react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { useTheme } from '../context/ThemeContext';
+
+const { width, height } = Dimensions.get('window');
 
 export default function PanelScreen({ navigation }: any) {
+    const { colors, theme } = useTheme();
     const [userData, setUserData] = useState({ nombre: '', seccion: '' });
     const [userAvatar, setUserAvatar] = useState<string | null>(null);
+    const [glowCard, setGlowCard] = useState<number | null>(null);
 
-    // Cargar avatar guardado al iniciar
+    // PARTÍCULAS GALÁCTICAS 
+    const particles = useMemo(() => 
+        Array.from({ length: 80 }).map((_, i) => ({
+            key: i,
+            left: Math.random() * width,
+            top: Math.random() * height,
+            size: Math.random() * 4 + 1,
+            color: colors.particleColors[i % colors.particleColors.length],
+            opacity: Math.random() * 0.6 + 0.2,
+        })), [colors.particleColors]
+    );
+
     useEffect(() => {
         const loadAvatar = async () => {
             try {
@@ -73,7 +90,6 @@ export default function PanelScreen({ navigation }: any) {
 
     const isLoggedIn = userData.nombre !== 'USUARIO' && userData.nombre !== '';
 
-    // Función para separar apellidos y nombres
     const splitName = (fullName: string) => {
         const parts = fullName.trim().split(' ');
         if (parts.length === 1) return { lastName: parts[0], firstName: '' };
@@ -85,7 +101,6 @@ export default function PanelScreen({ navigation }: any) {
 
     const { lastName, firstName } = splitName(userData.nombre);
 
-    // Funciones para manejar la foto de perfil
     const handleAvatarPress = () => {
         if (!isLoggedIn) {
             navigation.navigate('Login');
@@ -149,47 +164,6 @@ export default function PanelScreen({ navigation }: any) {
         });
     };
 
-    // Función para asignar el icono correcto de Lucide
-    const getIcon = (titulo: string) => {
-        const color = "#003c82";
-        const size = 22;
-        if (titulo.includes('Constancia')) return <FileText color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('CCT')) return <ShieldCheck color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Estatutos')) return <BookOpen color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Calendario') || titulo.includes('2 de Julio')) return <Calendar color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Hipotecario')) return <Home color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Mediano Plazo')) return <TrendingUp color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Aguinaldo')) return <Calculator color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Auto')) return <Car color={color} size={size} strokeWidth={1.8} />;
-        if (titulo.includes('Scanner')) return <QrCode color={color} size={size} strokeWidth={1.8} />;
-        return <Calculator color={color} size={size} strokeWidth={1.8} />;
-    };
-
-    const allMenuItems = [
-        { id: 1, titulo: 'Descargar Constancia', descripcion: 'Obtén tu documento oficial vigente', screen: null, publico: false },
-        { id: 2, titulo: 'CCT', descripcion: 'Contrato Colectivo de Trabajo', screen: null, publico: true },
-        { id: 3, titulo: 'Estatutos', descripcion: 'Reglamentos y normas sindicales', screen: null, publico: true },
-        { id: 4, titulo: 'Calendario', descripcion: 'Fechas importantes y eventos', screen: null, publico: true },
-        { id: 5, titulo: 'Calculadora Crédito Hipotecario', descripcion: 'Simula tu crédito hipotecario', screen: 'CalculadoraHipotecario', publico: true },
-        { id: 6, titulo: 'Calculadora Mediano Plazo', descripcion: 'Crédito hipotecario a mediano plazo', screen: 'CalculadoraMedianoPlazo', publico: true },
-        { id: 7, titulo: 'Calculadora Aguinaldo', descripcion: 'Calcula tu aguinaldo', screen: 'CalculadoraAguinaldo', publico: true },
-        { id: 8, titulo: 'Calculadora Auto', descripcion: 'Crédito para auto', screen: 'CalculadoraAuto', publico: true },
-        { id: 9, titulo: 'Calculadora 2 de Julio', descripcion: 'Calculadora especial', screen: 'Calculadora2Julio', publico: true },
-        { id: 10, titulo: 'Scanner QR', descripcion: 'Registro de asistencia rápido', screen: 'Scanner', publico: true },
-    ];
-
-    const menuItems = allMenuItems.filter(item => isLoggedIn || item.publico);
-
-    // Manejador para el perfil condicional
-    const handleProfilePress = () => {
-        if (isLoggedIn) {
-            navigation.navigate('Perfil');
-        } else {
-            navigation.navigate('Login');
-        }
-    };
-
-    // Manejador para el botón de logout
     const handleLogout = () => {
         Alert.alert(
             'Cerrar sesión',
@@ -209,16 +183,432 @@ export default function PanelScreen({ navigation }: any) {
         );
     };
 
+    const getIcon = (titulo: string) => {
+        const color = colors.textPrimary;
+        const size = 24;
+        if (titulo.includes('Constancia')) return <FileText color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('CCT')) return <ShieldCheck color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Estatutos')) return <BookOpen color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Calendario') || titulo.includes('2 de Julio')) return <Calendar color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Hipotecario')) return <Home color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Mediano Plazo')) return <TrendingUp color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Aguinaldo')) return <Calculator color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Auto')) return <Car color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Scanner')) return <QrCode color={color} size={size} strokeWidth={1.8} />;
+        return <Calculator color={color} size={size} strokeWidth={1.8} />;
+    };
+
+    // SOLO QUEDAN LAS OPCIONES PRINCIPALES
+    const allMenuItems = [
+        { id: 1, titulo: 'CCT', descripcion: 'Contrato Colectivo de Trabajo', screen: null, publico: true },
+        { id: 2, titulo: 'Estatutos', descripcion: 'Reglamentos y normas', screen: null, publico: true },
+        { id: 3, titulo: 'Calendario', descripcion: 'Fechas importantes y eventos', screen: 'Calendario', publico: true },
+        { id: 9, titulo: 'Scanner QR', descripcion: 'Registro de asistencia', screen: 'Scanner', publico: true },
+    ];
+
+    const menuItems = allMenuItems.filter(item => isLoggedIn || item.publico);
+
+    const handleProfilePress = () => {
+        if (isLoggedIn) {
+            navigation.navigate('Perfil');
+        } else {
+            navigation.navigate('Login');
+        }
+    };
+
+    const handleCardPress = (item: any) => {
+        setGlowCard(item.id);
+        setTimeout(() => setGlowCard(null), 300);
+
+        if (item.screen) {
+            navigation.navigate(item.screen);
+        } else {
+            Alert.alert(
+                'Próximamente',
+                'Esta función estará disponible muy pronto',
+                [
+                    { 
+                        text: 'OK', 
+                        onPress: () => {
+                            setTimeout(() => {
+                                navigation.navigate('Panel');
+                            }, 2000);
+                        }
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    };
+
+    // ESTILOS DENTRO DEL COMPONENTE (CORREGIDO - SIN DUPLICADOS)
+    const styles = StyleSheet.create({
+        mainWrapper: { 
+            flex: 1, 
+            backgroundColor: colors.background,
+        },
+        safeArea: { flex: 1 },
+        scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+        
+        circleDecoration1: {
+            position: 'absolute',
+            width: 400,
+            height: 400,
+            borderRadius: 200,
+            backgroundColor: colors.circle1,
+            top: -150,
+            right: -150,
+            opacity: 0.1,
+        },
+        circleDecoration2: {
+            position: 'absolute',
+            width: 350,
+            height: 350,
+            borderRadius: 175,
+            backgroundColor: colors.circle2,
+            bottom: -120,
+            left: -120,
+            opacity: 0.1,
+        },
+        circleDecoration3: {
+            position: 'absolute',
+            width: 250,
+            height: 250,
+            borderRadius: 125,
+            backgroundColor: colors.circle3,
+            bottom: 100,
+            right: -80,
+            opacity: 0.07,
+        },
+        
+        header: {
+            marginTop: Platform.OS === 'android' ? 40 : 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            marginBottom: 25,
+        },
+        avatarWrapper: {
+            width: 55,
+            height: 55,
+            marginRight: 12,
+        },
+        avatar: { 
+            width: 55, 
+            height: 55, 
+            borderRadius: 27.5,
+            borderWidth: 2,
+            borderColor: colors.avatarBorder,
+        },
+        nameWrapper: {
+            flex: 1,
+        },
+        lastName: {
+            fontSize: 15,
+            fontWeight: 'bold',
+            color: colors.textPrimary,
+            textTransform: 'uppercase',
+            marginBottom: 2,
+        },
+        firstName: {
+            fontSize: 15,
+            fontWeight: '500',
+            color: colors.textSecondary,
+            marginBottom: 2,
+        },
+        userSection: {
+            fontSize: 12,
+            color: colors.textSecondary,
+            fontWeight: '500',
+        },
+        logoutButton: {
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            ...Platform.select({
+                ios: {
+                    shadowColor: colors.textPrimary,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                },
+                android: {
+                    elevation: 3,
+                },
+            }),
+        },
+
+        downloadCard: {
+            backgroundColor: '#003c82',
+            borderRadius: 20,
+            padding: 20,
+            marginBottom: 25,
+            width: '100%',
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#003c82',
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 12,
+                },
+                android: {
+                    elevation: 8,
+                },
+            }),
+        },
+        downloadContent: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        downloadIconWrapper: {
+            width: 60,
+            height: 60,
+            borderRadius: 16,
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 15,
+        },
+        downloadTextWrapper: {
+            flex: 1,
+        },
+        downloadTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#FFF',
+            marginBottom: 4,
+        },
+        downloadDescription: {
+            fontSize: 13,
+            color: 'rgba(255,255,255,0.8)',
+            lineHeight: 18,
+        },
+        downloadBadge: {
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            borderRadius: 20,
+            alignSelf: 'flex-start',
+            marginTop: 12,
+        },
+        downloadBadgeText: {
+            color: '#FFF',
+            fontSize: 12,
+            fontWeight: 'bold',
+        },
+
+        // BOTÓN DE CALCULADORAS (SOLO UNA VEZ)
+        botonCalculadoras: {
+            width: '100%',
+            backgroundColor: colors.card,
+            borderRadius: 20,
+            marginBottom: 20,
+            overflow: 'hidden',
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 6,
+                },
+                android: {
+                    elevation: 3,
+                },
+            }),
+        },
+        botonCalculadorasAccent: {
+            height: 4, 
+            width: '100%',
+            backgroundColor: colors.cardAccent,
+        },
+        botonCalculadorasContent: {
+            paddingVertical: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        botonIconWrapper: {
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            backgroundColor: 'transparent',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 6,
+        },
+        botonCalculadorasText: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: colors.textPrimary,
+        },
+
+        gridContainer: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            gap: 12,
+        },
+        card: {
+            width: '48%',
+            backgroundColor: colors.card,
+            borderRadius: 24,
+            marginBottom: 12,
+            overflow: 'hidden',
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                },
+                android: {
+                    elevation: 3,
+                },
+            }),
+        },
+        cardGlow: {
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#00a8ff',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 12,
+                },
+                android: {
+                    elevation: 8,
+                },
+            }),
+        },
+        cardAccent: {
+            height: 5,
+            width: '100%',
+            backgroundColor: colors.cardAccent,
+        },
+        cardContent: {
+            padding: 14,
+            alignItems: 'center',
+        },
+        cardIconWrapper: {
+            width: 50,
+            height: 50,
+            borderRadius: 12,
+            backgroundColor: 'transparent',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 10,
+        },
+        cardTitle: {
+            fontSize: 15,
+            fontWeight: 'bold',
+            color: colors.textPrimary,
+            marginBottom: 4,
+            textAlign: 'center',
+            lineHeight: 18,
+        },
+        cardDescription: {
+            fontSize: 11,
+            color: colors.textSecondary,
+            textAlign: 'center',
+            lineHeight: 14,
+        },
+
+        bottomTab: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            flexDirection: 'row',
+            backgroundColor: colors.bottomTab,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            borderTopWidth: 1,
+            borderTopColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            ...Platform.select({
+                ios: {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: -2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                },
+                android: {
+                    elevation: 20,
+                },
+            }),
+        },
+        tabItem: { alignItems: 'center', flex: 1 },
+        tabLabel: { 
+            fontSize: 11, 
+            color: colors.tabLabel, 
+            marginTop: 4, 
+            fontWeight: '500' 
+        },
+        tabLabelActive: { 
+            color: colors.tabLabelActive, 
+            fontWeight: 'bold' 
+        },
+        centerTab: {
+            alignItems: 'center',
+            top: -20,
+            backgroundColor: colors.centerTab,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 30,
+            ...Platform.select({
+                ios: {
+                    shadowColor: colors.centerTab,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                },
+                android: {
+                    elevation: 8,
+                },
+            }),
+        },
+        centerTabLabel: {
+            fontSize: 11,
+            color: '#FFF',
+            marginTop: 2,
+            fontWeight: '600',
+        },
+    });
+
     return (
         <View style={styles.mainWrapper}>
+            {/* PARTÍCULAS GALÁCTICAS */}
+            <View style={StyleSheet.absoluteFillObject}>
+                {particles.map((p) => (
+                    <View
+                        key={p.key}
+                        style={{
+                            position: 'absolute',
+                            left: p.left,
+                            top: p.top,
+                            width: p.size,
+                            height: p.size,
+                            borderRadius: p.size / 2,
+                            backgroundColor: p.color,
+                            opacity: p.opacity,
+                        }}
+                    />
+                ))}
+            </View>
+
+            <View style={styles.circleDecoration1} />
+            <View style={styles.circleDecoration2} />
+            <View style={styles.circleDecoration3} />
+
             <SafeAreaView style={styles.safeArea}>
-                <StatusBar barStyle="dark-content" />
+                <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
                 
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     
-                    {/* HEADER CON MENOS MARGEN SUPERIOR */}
                     <View style={styles.header}>
-                        {/* Avatar */}
                         <TouchableOpacity onPress={handleAvatarPress} style={styles.avatarWrapper}>
                             {isLoggedIn && userAvatar ? (
                                 <Image 
@@ -234,7 +624,6 @@ export default function PanelScreen({ navigation }: any) {
                             )}
                         </TouchableOpacity>
 
-                        {/* Nombre y sección */}
                         <View style={styles.nameWrapper}>
                             {isLoggedIn ? (
                                 <>
@@ -252,203 +641,106 @@ export default function PanelScreen({ navigation }: any) {
                             )}
                         </View>
 
-                        {/* Icono de logout */}
                         {isLoggedIn && (
-                            <TouchableOpacity style={styles.logoutWrapper} onPress={handleLogout}>
-                                <LogOut color="#003c82" size={22} />
+                            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                                <LogOut color={colors.textPrimary} size={22} />
                             </TouchableOpacity>
                         )}
                     </View>
 
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.title}>Panel de Control</Text>
-                        <Text style={styles.subtitle}>Gestiona tus trámites y consultas SNTSS</Text>
-                    </View>
+                    {isLoggedIn && (
+                        <TouchableOpacity style={styles.downloadCard} activeOpacity={0.8}>
+                            <View style={styles.downloadContent}>
+                                <View style={styles.downloadIconWrapper}>
+                                    <Download color="#FFF" size={32} strokeWidth={2.5} />
+                                </View>
+                                <View style={styles.downloadTextWrapper}>
+                                    <Text style={styles.downloadTitle}>Descargar Constancia</Text>
+                                    <Text style={styles.downloadDescription}>
+                                        Obtén tu documento oficial de afiliación actualizado al instante.
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={styles.downloadBadge}>
+                                <Text style={styles.downloadBadgeText}>OFICIAL</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
 
-                    <View style={styles.listContainer}>
+                    {/* BOTÓN PARA IR A CALCULADORAS */}
+                    <TouchableOpacity 
+                        style={styles.botonCalculadoras}
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate('Calculadoras')}
+                    >
+                        <View style={styles.botonCalculadorasAccent} />
+                        
+                        <View style={styles.botonCalculadorasContent}>
+                            <View style={styles.botonIconWrapper}>
+                                <Calculator 
+                                    color={theme === 'dark' ? '#FFF' : colors.cardAccent} 
+                                    size={24} 
+                                    strokeWidth={2} 
+                                />
+                            </View>
+
+                            <Text style={styles.botonCalculadorasText}>Calculadoras</Text>
+                            <Text style={styles.cardDescription}>Préstamos</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <View style={styles.gridContainer}>
                         {menuItems.map((item) => (
                             <TouchableOpacity
                                 key={item.id}
-                                style={styles.menuListItem}
+                                style={[
+                                    styles.card,
+                                    glowCard === item.id && styles.cardGlow
+                                ]}
                                 activeOpacity={0.7}
-                                onPress={() => item.screen ? navigation.navigate(item.screen) : Alert.alert('Próximamente', 'Disponible muy pronto')}
+                                onPress={() => handleCardPress(item)}
                             >
-                                <View style={styles.accentLine} />
-                                <View style={styles.itemIconWrapper}>
-                                    {getIcon(item.titulo)}
+                                <View style={styles.cardAccent} />
+                                
+                                <View style={styles.cardContent}>
+                                    <View style={styles.cardIconWrapper}>
+                                        {getIcon(item.titulo)}
+                                    </View>
+                                    <Text style={styles.cardTitle} numberOfLines={2}>{item.titulo}</Text>
+                                    <Text style={styles.cardDescription} numberOfLines={2}>{item.descripcion}</Text>
                                 </View>
-                                <View style={styles.itemTextWrapper}>
-                                    <Text style={styles.itemTitle}>{item.titulo}</Text>
-                                    <Text style={styles.itemDescription} numberOfLines={1}>{item.descripcion}</Text>
-                                </View>
-                                <ChevronRight color="#CBD5E0" size={18} />
                             </TouchableOpacity>
                         ))}
                     </View>
                 </ScrollView>
             </SafeAreaView>
 
-            {/* TAB BAR */}
             <View style={styles.bottomTab}>
                 <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Panel')}>
-                    <Home color="#003c82" size={24} />
+                    <Home color={colors.tabIcon} size={24} />
                     <Text style={[styles.tabLabel, styles.tabLabelActive]}>Inicio</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.tabItem} onPress={() => Alert.alert('Noticias', 'Próximamente')}>
-                    <Newspaper color="#708999" size={24} />
+                    <Newspaper color={colors.tabIcon} size={24} />
                     <Text style={styles.tabLabel}>Noticias</Text>
                 </TouchableOpacity>
                 
-                <View style={styles.centerTabWrapper}>
-                    <TouchableOpacity style={styles.centerTab} onPress={handleProfilePress}>
-                        <User color="#FFF" size={28} />
-                    </TouchableOpacity>
+                <TouchableOpacity style={styles.centerTab} onPress={handleProfilePress}>
+                    <User color="#FFF" size={28} />
                     <Text style={styles.centerTabLabel}>Perfil</Text>
-                </View>
+                </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.tabItem} onPress={() => Alert.alert('Digital', 'Próximamente')}>
-                    <CreditCard color="#708999" size={24} />
+                    <CreditCard color={colors.tabIcon} size={24} />
                     <Text style={styles.tabLabel}>Digital</Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.tabItem} onPress={() => Alert.alert('Ajustes', 'Próximamente')}>
-                    <Settings color="#708999" size={24} />
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Ajustes')}>
+                    <Settings color={colors.tabIcon} size={24} />
                     <Text style={styles.tabLabel}>Ajustes</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    mainWrapper: { flex: 1, backgroundColor: '#F0F7FF' },
-    safeArea: { flex: 1 },
-    scrollContent: { paddingHorizontal: 20, paddingBottom: 130 },
-    
-    // HEADER CON MENOS MARGEN SUPERIOR
-    header: {
-        marginTop: Platform.OS === 'android' ? 60 : 50,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        width: '100%',
-        marginBottom: 5,
-    },
-    avatarWrapper: {
-        width: 60,
-        height: 60,
-        marginRight: 12,
-    },
-    avatar: { 
-        width: 60, 
-        height: 60, 
-        borderRadius: 30,
-        borderWidth: 2,
-        borderColor: '#003c82',
-    },
-    nameWrapper: {
-        flex: 1,
-        marginRight: 10,
-    },
-    lastName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#003c82',
-        textTransform: 'uppercase',
-        marginBottom: 2,
-    },
-    firstName: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#1B476A',
-        marginBottom: 4,
-    },
-    userSection: {
-        fontSize: 12,
-        color: '#4a6fa5',
-        fontWeight: '500',
-    },
-    logoutWrapper: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#FFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-    },
-    
-    titleContainer: { marginVertical: 20 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#003c82' },
-    subtitle: { fontSize: 15, color: '#4a6fa5', marginTop: 4 },
-
-    listContainer: { gap: 14 },
-    menuListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        overflow: 'hidden',
-        ...Platform.select({
-            ios: { shadowColor: '#003c82', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
-            android: { elevation: 4 },
-        }),
-    },
-    accentLine: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 5,
-        backgroundColor: '#003c82',
-    },
-    itemIconWrapper: { width: 45, height: 45, borderRadius: 12, backgroundColor: '#F0F7FF', justifyContent: 'center', alignItems: 'center' },
-    itemTextWrapper: { flex: 1, marginLeft: 15 },
-    itemTitle: { fontSize: 16, fontWeight: 'bold', color: '#003c82' },
-    itemDescription: { fontSize: 12, color: '#718096', marginTop: 2 },
-
-    bottomTab: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
-        paddingBottom: Platform.OS === 'ios' ? 30 : 15,
-        paddingTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#E1E8ED',
-        elevation: 20,
-    },
-    tabItem: { flex: 1, alignItems: 'center' },
-    tabLabel: { fontSize: 10, color: '#708999', marginTop: 4, fontWeight: '600' },
-    tabLabelActive: { color: '#003c82' },
-    centerTabWrapper: { 
-        flex: 1, 
-        alignItems: 'center', 
-        top: -20,
-    },
-    centerTab: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#003c82',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 5,
-        borderColor: '#F0F7FF',
-        elevation: 10,
-    },
-    centerTabLabel: {
-        fontSize: 10,
-        color: '#708999',
-        marginTop: 8,
-        fontWeight: '600',
-        textAlign: 'center',
-    },
-});

@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     StyleSheet,
     ScrollView,
+    Switch,
     SafeAreaView,
     StatusBar,
     Platform,
@@ -13,17 +14,18 @@ import {
     Dimensions
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Gift, Calculator, Info } from 'lucide-react-native';
+import { ArrowLeft, Clock, Calculator, Info } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function CalculadoraAguinaldo({ navigation }: any) {
+export default function CalculadoraHorasExtras({ navigation }: any) {
     const { colors, theme } = useTheme();
 
-    const [c02, setC02] = useState('');
-    const [c11, setC11] = useState('');
-    const [dias, setDias] = useState('365');
-    const [resultados, setResultados] = useState<any>(null);
+    const [smi, setSmi] = useState('');
+    const [jornada, setJornada] = useState('8');
+    const [horas, setHoras] = useState('');
+    const [isInfecto, setIsInfecto] = useState(false);
+    const [resultado, setResultado] = useState<any>(null);
 
     // PARTÍCULAS GALÁCTICAS
     const particles = useMemo(() => 
@@ -38,34 +40,28 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
     );
 
     const calcular = () => {
-        const val02 = parseFloat(c02);
-        const val11 = parseFloat(c11);
-        let valDias = parseFloat(dias);
+        const smiNum = parseFloat(smi);
+        const horasNum = parseFloat(horas);
+        const jornadaNum = parseFloat(jornada);
 
-        if (isNaN(val02) || isNaN(val11)) {
-            Alert.alert('Error', 'Por favor, ingresa los conceptos 002 y 011');
+        if (isNaN(smiNum) || smiNum <= 0 || isNaN(horasNum) || horasNum <= 0) {
+            Alert.alert('Error', 'Por favor, ingresa los datos requeridos correctamente');
             return;
         }
 
-        // Validación de días (máximo 365)
-        if (isNaN(valDias) || valDias <= 0 || valDias > 365) {
-            valDias = 365;
-        }
+        // Lógica: 12 horas usa 8 como base de contrato
+        const jornadaEfectiva = (jornadaNum === 12) ? 8 : jornadaNum;
 
-        const factorProporcional = valDias / 365;
+        const obtenerPago = (baseSueldo: number) => {
+            const salarioDiario = baseSueldo / 30;
+            const valorHoraNormal = salarioDiario / jornadaEfectiva;
+            const valorHoraExtra = valorHoraNormal * 2;
+            return valorHoraExtra * horasNum;
+        };
 
-        // 🔥 NUEVA FÓRMULA IMSS
-        // baseQuincenal = (c02 + (c11 * 2)) * 0.8215
-        const baseQuincenal = (val02 + (val11 * 2)) * 0.8215;
-        const baseMensual = baseQuincenal * 2;
-        const valorDiario = baseMensual / 30;
-
-        // Cálculo por periodos con proporcionalidad aplicada
-        setResultados({
-            enero: (valorDiario * 15) * factorProporcional,
-            agosto: (valorDiario * 30) * factorProporcional,
-            diciembreCon: (valorDiario * 45) * factorProporcional,
-            diciembreSin: (valorDiario * 75) * factorProporcional,
+        setResultado({
+            normal: obtenerPago(smiNum),
+            conInfecto: isInfecto ? obtenerPago(smiNum * 1.20) : null
         });
     };
 
@@ -106,27 +102,20 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <ArrowLeft color={colors.textPrimary} size={24} />
                     </TouchableOpacity>
-                    <Text style={[styles.title, { color: colors.textPrimary }]}>Aguinaldo</Text>
+                    <Text style={[styles.title, { color: colors.textPrimary }]}>Horas Extras</Text>
                     <View style={{ width: 40 }} />
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={[styles.card, { backgroundColor: colors.card }]}>
                         <View style={[styles.cardHeader, { backgroundColor: colors.cardAccent }]}>
-                            <Gift color="#FFF" size={24} />
-                            <Text style={styles.cardTitle}>Aguinaldo (Concepto 049)</Text>
+                            <Clock color="#FFF" size={24} />
+                            <Text style={styles.cardTitle}>Pago de Horas Extras</Text>
                         </View>
 
                         <View style={styles.cardBody}>
-                            <View style={[styles.alertBox, { backgroundColor: colors.cardAccent + '20' }]}>
-                                <Info color={colors.cardAccent} size={16} />
-                                <Text style={[styles.alertText, { color: colors.textSecondary }]}>
-                                    Nota: Faltas, licencias e incidencias modifican el monto final.
-                                </Text>
-                            </View>
-
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 002:</Text>
+                                <Text style={[styles.label, { color: colors.textPrimary }]}>Sueldo Mensual Integrado (SMI):</Text>
                                 <TextInput
                                     style={[
                                         styles.input,
@@ -136,16 +125,44 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                             color: colors.textPrimary
                                         }
                                     ]}
-                                    placeholder="Ej: 2437.73"
+                                    placeholder="Ej: 12500.00"
                                     placeholderTextColor={colors.textSecondary}
                                     keyboardType="numeric"
-                                    value={c02}
-                                    onChangeText={setC02}
+                                    value={smi}
+                                    onChangeText={setSmi}
                                 />
                             </View>
 
                             <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Concepto 011:</Text>
+                                <Text style={[styles.label, { color: colors.textPrimary }]}>Jornada Laboral:</Text>
+                                <View style={styles.pickerContainer}>
+                                    {['6.5', '8', '12'].map((opcion) => (
+                                        <TouchableOpacity 
+                                            key={opcion}
+                                            style={[
+                                                styles.chip, 
+                                                jornada === opcion && styles.chipActive,
+                                                { 
+                                                    borderColor: theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#ddd',
+                                                    backgroundColor: jornada === opcion ? colors.cardAccent : (theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#fafafa')
+                                                }
+                                            ]}
+                                            onPress={() => setJornada(opcion)}
+                                        >
+                                            <Text style={[
+                                                styles.chipText, 
+                                                jornada === opcion && styles.chipTextActive,
+                                                { color: jornada === opcion ? '#FFF' : colors.textSecondary }
+                                            ]}>
+                                                {opcion === '12' ? '12h (Velada)' : `${opcion}h`}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={[styles.label, { color: colors.textPrimary }]}>Horas Extras Trabajadas:</Text>
                                 <TextInput
                                     style={[
                                         styles.input,
@@ -155,34 +172,25 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                             color: colors.textPrimary
                                         }
                                     ]}
-                                    placeholder="Ej: 2002.60"
+                                    placeholder="Ej: 5"
                                     placeholderTextColor={colors.textSecondary}
                                     keyboardType="numeric"
-                                    value={c11}
-                                    onChangeText={setC11}
+                                    value={horas}
+                                    onChangeText={setHoras}
                                 />
                             </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: colors.textPrimary }]}>Días trabajados (opcional):</Text>
-                                <TextInput
-                                    style={[
-                                        styles.input,
-                                        {
-                                            backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#F5F8FF',
-                                            borderColor: theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E0E8F0',
-                                            color: colors.textPrimary
-                                        }
-                                    ]}
-                                    placeholder="365"
-                                    placeholderTextColor={colors.textSecondary}
-                                    keyboardType="numeric"
-                                    value={dias}
-                                    onChangeText={setDias}
+                            <View style={styles.switchContainer}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>Infectocontagiosidad</Text>
+                                    <Text style={[styles.switchSubLabel, { color: colors.textSecondary }]}>Aplica un 20% adicional al SMI</Text>
+                                </View>
+                                <Switch
+                                    value={isInfecto}
+                                    onValueChange={setIsInfecto}
+                                    trackColor={{ false: "#d1d1d1", true: colors.cardAccent }}
+                                    thumbColor={isInfecto ? '#FFF' : '#f4f3f4'}
                                 />
-                                <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-                                    Si no sabes tus incidencias, deja 365.
-                                </Text>
                             </View>
 
                             <TouchableOpacity
@@ -190,41 +198,22 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
                                 onPress={calcular}
                             >
                                 <Calculator color="#FFF" size={20} />
-                                <Text style={styles.buttonText}>Calcular Aguinaldo</Text>
+                                <Text style={styles.buttonText}>Calcular Pago Doble</Text>
                             </TouchableOpacity>
 
-                            {resultados && (
-                                <View style={styles.resultContainer}>
-                                    <Text style={[styles.resultHeader, { color: colors.textPrimary }]}>Montos Estimados:</Text>
-                                    
-                                    <ResultRow 
-                                        label="Anticipo Enero (15d)" 
-                                        value={format(resultados.enero)} 
-                                        color="#6c757d"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Adelanto Agosto (30d)" 
-                                        value={format(resultados.agosto)} 
-                                        color="#6aa5e9"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Dic. (Con Adelanto)" 
-                                        value={format(resultados.diciembreCon)} 
-                                        color="#00a8ff"
-                                        theme={theme}
-                                    />
-                                    <ResultRow 
-                                        label="Dic. (Sin Adelanto)" 
-                                        value={format(resultados.diciembreSin)} 
-                                        color="#28a745"
-                                        theme={theme}
-                                    />
+                            {resultado && (
+                                <View style={styles.resWrapper}>
+                                    <View style={[styles.resItem, { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F8F9FA' }]}>
+                                        <Text style={[styles.resLabelText, { color: colors.textSecondary }]}>Pago Estándar:</Text>
+                                        <Text style={[styles.resAmount, { color: colors.textPrimary }]}>{format(resultado.normal)}</Text>
+                                    </View>
 
-                                    <Text style={[styles.footerNote, { color: colors.textSecondary }]}>
-                                        *Cálculo proporcional basado en {dias} días.
-                                    </Text>
+                                    {isInfecto && (
+                                        <View style={[styles.resItem, styles.resInfecto, { backgroundColor: colors.cardAccent + '20' }]}>
+                                            <Text style={[styles.resLabelText, { color: colors.textSecondary  }]}>Pago con 20%:</Text>
+                                            <Text style={[styles.resAmount, { color: '#28a745' }]}>{format(resultado.conInfecto)}</Text>
+                                        </View>
+                                    )}
                                 </View>
                             )}
                         </View>
@@ -234,14 +223,6 @@ export default function CalculadoraAguinaldo({ navigation }: any) {
         </View>
     );
 }
-
-// Sub-componente para cada fila de resultado
-const ResultRow = ({ label, value, color, theme }: any) => (
-    <View style={[styles.resRow, { borderLeftColor: color, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F8F9FA' }]}>
-        <Text style={[styles.resLabel, { color: theme === 'dark' ? '#FFF' : '#555' }]}>{label}</Text>
-        <Text style={[styles.resValue, { color: color }]}>{value}</Text>
-    </View>
-);
 
 const styles = StyleSheet.create({
     container: {
@@ -303,24 +284,12 @@ const styles = StyleSheet.create({
     cardBody: {
         padding: 20,
     },
-    alertBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 20,
-        gap: 8,
-    },
-    alertText: {
-        fontSize: 13,
-        flex: 1,
-    },
     inputGroup: {
-        marginBottom: 15,
+        marginBottom: 18,
     },
     label: {
         fontWeight: '600',
-        marginBottom: 5,
+        marginBottom: 8,
         fontSize: 14,
     },
     input: {
@@ -329,9 +298,44 @@ const styles = StyleSheet.create({
         padding: 14,
         fontSize: 16,
     },
-    helperText: {
+    pickerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 8,
+    },
+    chip: {
+        flex: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        borderWidth: 1,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    chipActive: {
+        borderColor: 'transparent',
+    },
+    chipText: {
+        fontWeight: '600',
+        fontSize: 12,
+    },
+    chipTextActive: {
+        color: '#FFF',
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.05)',
+        marginBottom: 10,
+    },
+    switchLabel: {
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    switchSubLabel: {
         fontSize: 11,
-        marginTop: 4,
+        marginTop: 2,
     },
     button: {
         flexDirection: 'row',
@@ -347,36 +351,27 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-    resultContainer: {
+    resWrapper: {
         marginTop: 25,
     },
-    resultHeader: {
-        textAlign: 'center',
-        fontWeight: 'bold',
-        marginBottom: 15,
-        fontSize: 14,
+    resItem: {
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 10,
+        alignItems: 'center',
     },
-    resRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 8,
-        borderLeftWidth: 5,
+    resInfecto: {
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
     },
-    resLabel: {
-        fontSize: 13,
+    resLabelText: {
+        fontSize: 12,
         fontWeight: '600',
+        marginBottom: 5,
     },
-    resValue: {
-        fontSize: 15,
+    resAmount: {
+        fontSize: 24,
         fontWeight: 'bold',
-    },
-    footerNote: {
-        fontSize: 11,
-        textAlign: 'center',
-        marginTop: 10,
-        fontStyle: 'italic',
     },
 
     // CÍRCULOS DECORATIVOS

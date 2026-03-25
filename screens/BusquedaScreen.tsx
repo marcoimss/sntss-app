@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -8,17 +8,35 @@ import {
     Alert,
     ScrollView,
     ActivityIndicator,
-    Platform
+    Platform,
+    Dimensions
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../context/ThemeContext';
+import { ArrowLeft, Home, Search, User, MapPin, FileText, AlertCircle } from 'lucide-react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export default function BusquedaScreen({ navigation }: any) {
+    const { colors, theme } = useTheme();
     const [matricula, setMatricula] = useState('');
     const [secciones, setSecciones] = useState([]);
     const [seccionSeleccionada, setSeccionSeleccionada] = useState('');
     const [curp, setCurp] = useState('');
     const [loading, setLoading] = useState(false);
     const [cargandoSecciones, setCargandoSecciones] = useState(true);
+
+    // PARTÍCULAS GALÁCTICAS
+    const particles = useMemo(() => 
+        Array.from({ length: 60 }).map((_, i) => ({
+            key: i,
+            left: Math.random() * width,
+            top: Math.random() * height,
+            size: Math.random() * 3 + 1,
+            color: colors.particleColors[i % colors.particleColors.length],
+            opacity: Math.random() * 0.5 + 0.2,
+        })), [colors.particleColors]
+    );
 
     useEffect(() => {
         cargarSecciones();
@@ -74,185 +92,271 @@ export default function BusquedaScreen({ navigation }: any) {
         }
     };
 
+    const handleGoBack = () => {
+        navigation.goBack();
+    };
+
+    const handleGoToPanel = () => {
+        navigation.navigate('Panel');
+    };
+
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            {/* Círculos decorativos - 3 como en Panel */}
-            <View style={styles.circleDecoration1} />
-            <View style={styles.circleDecoration2} />
-            <View style={styles.circleDecoration3} />
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            {/* PARTÍCULAS GALÁCTICAS */}
+            <View style={StyleSheet.absoluteFillObject}>
+                {particles.map((p) => (
+                    <View
+                        key={p.key}
+                        style={{
+                            position: 'absolute',
+                            left: p.left,
+                            top: p.top,
+                            width: p.size,
+                            height: p.size,
+                            borderRadius: p.size / 2,
+                            backgroundColor: p.color,
+                            opacity: p.opacity,
+                        }}
+                    />
+                ))}
+            </View>
 
-            <Text style={styles.mainTitle}>Registro SNTSS</Text>
-            <Text style={styles.welcomeSubtitle}>Primer ingreso - Verifica tus datos</Text>
+            {/* CÍRCULOS DECORATIVOS DINÁMICOS */}
+            <View style={[styles.circleDecoration1, { backgroundColor: colors.circle1 }]} />
+            <View style={[styles.circleDecoration2, { backgroundColor: colors.circle2 }]} />
+            <View style={[styles.circleDecoration3, { backgroundColor: colors.circle3 }]} />
 
-            <View style={styles.card}>
-                <Text style={styles.inputLabel}>Matrícula</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ingrese su matrícula"
-                    placeholderTextColor="#8A9BB5"
-                    value={matricula}
-                    onChangeText={setMatricula}
-                    keyboardType="numeric"
-                />
-
-                <Text style={styles.inputLabel}>Sección</Text>
-                <View style={styles.pickerContainer}>
-                    {cargandoSecciones ? (
-                        <ActivityIndicator size="small" color="#003c82" />
-                    ) : (
-                        <Picker
-                            selectedValue={seccionSeleccionada}
-                            onValueChange={(itemValue: string) => setSeccionSeleccionada(itemValue)}
-                            style={styles.picker}
-                            dropdownIconColor="#003c82"
-                        >
-                            <Picker.Item label="Seleccione una sección" value="" />
-                            {secciones.map((sec: any) => (
-                                <Picker.Item
-                                    key={sec.id}
-                                    label={`${sec.romano} - ${sec.nombre}`}
-                                    value={sec.idSeccion}
-                                />
-                            ))}
-                        </Picker>
-                    )}
-                </View>
-
-                <Text style={styles.inputLabel}>CURP</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ingrese su CURP"
-                    placeholderTextColor="#8A9BB5"
-                    value={curp}
-                    onChangeText={(text) => setCurp(text.toUpperCase())}
-                    autoCapitalize="characters"
-                    maxLength={18}
-                />
-
-                <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
-                    onPress={handleBuscar}
-                    disabled={loading || cargandoSecciones}
+            {/* HEADER CON BOTONES */}
+            <View style={styles.header}>
+                <TouchableOpacity 
+                    onPress={handleGoBack}
+                    style={[
+                        styles.backButton,
+                        { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                    ]}
                 >
-                    <Text style={styles.buttonText}>
-                        {loading ? 'VALIDANDO...' : 'Buscar →'}
-                    </Text>
+                    <ArrowLeft color={colors.textPrimary} size={24} />
+                </TouchableOpacity>
+                <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+                    Primer Registro
+                </Text>
+                <TouchableOpacity 
+                    onPress={handleGoToPanel}
+                    style={[
+                        styles.homeButton,
+                        { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                    ]}
+                >
+                    <Home color={colors.textPrimary} size={22} />
                 </TouchableOpacity>
             </View>
-        </ScrollView>
+
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <Text style={[styles.mainTitle, { color: colors.cardAccent }]}>Registro SNTSS</Text>
+                <Text style={[styles.welcomeSubtitle, { color: colors.textSecondary }]}>
+                    Primer ingreso - Verifica tus datos
+                </Text>
+
+                <View style={[styles.card, { backgroundColor: colors.card }]}>
+                    {/* Campo Matrícula */}
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                        <User size={16} color={colors.cardAccent} /> Matrícula
+                    </Text>
+                    <View style={[styles.inputContainer, { borderColor: colors.cardAccent }]}>
+                        <User size={20} color={colors.cardAccent} style={styles.inputIcon} />
+                        <TextInput
+                            style={[styles.input, { color: colors.textPrimary }]}
+                            placeholder="Ingrese su matrícula"
+                            placeholderTextColor={colors.textSecondary + '80'}
+                            value={matricula}
+                            onChangeText={setMatricula}
+                            keyboardType="numeric"
+                        />
+                    </View>
+
+                    {/* Campo Sección */}
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                        <MapPin size={16} color={colors.cardAccent} /> Sección
+                    </Text>
+                    <View style={[styles.pickerContainer, { backgroundColor: colors.cardAccent + '10', borderColor: colors.cardAccent }]}>
+                        {cargandoSecciones ? (
+                            <ActivityIndicator size="small" color={colors.cardAccent} style={styles.pickerLoading} />
+                        ) : (
+                            <Picker
+                                selectedValue={seccionSeleccionada}
+                                onValueChange={(itemValue: string) => setSeccionSeleccionada(itemValue)}
+                                style={[styles.picker, { color: colors.textPrimary }]}
+                                dropdownIconColor={colors.cardAccent}
+                            >
+                                <Picker.Item label="Seleccione una sección" value="" />
+                                {secciones.map((sec: any) => (
+                                    <Picker.Item
+                                        key={sec.id}
+                                        label={`${sec.romano} - ${sec.nombre}`}
+                                        value={sec.idSeccion}
+                                    />
+                                ))}
+                            </Picker>
+                        )}
+                    </View>
+
+                    {/* Campo CURP */}
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+                        <FileText size={16} color={colors.cardAccent} /> CURP
+                    </Text>
+                    <View style={[styles.inputContainer, { borderColor: colors.cardAccent }]}>
+                        <FileText size={20} color={colors.cardAccent} style={styles.inputIcon} />
+                        <TextInput
+                            style={[styles.input, { color: colors.textPrimary }]}
+                            placeholder="Ingrese su CURP"
+                            placeholderTextColor={colors.textSecondary + '80'}
+                            value={curp}
+                            onChangeText={(text) => setCurp(text.toUpperCase())}
+                            autoCapitalize="characters"
+                            maxLength={18}
+                        />
+                    </View>
+
+                    {/* Botón Buscar */}
+                    <TouchableOpacity
+                        style={[styles.button, { backgroundColor: colors.cardAccent }, (loading || cargandoSecciones) && styles.buttonDisabled]}
+                        onPress={handleBuscar}
+                        disabled={loading || cargandoSecciones}
+                    >
+                        <Search color="#FFF" size={20} />
+                        <Text style={styles.buttonText}>
+                            {loading ? 'VALIDANDO...' : 'Buscar'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    {/* Mensaje informativo */}
+                    <View style={styles.infoContainer}>
+                        <AlertCircle size={14} color={colors.textSecondary} />
+                        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                            Ingresa los datos que aparecen en tu credencial del SNTSS
+                        </Text>
+                    </View>
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        backgroundColor: '#F0F7FF',
-        padding: 20,
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: Platform.OS === 'android' ? 40 : 20,
+        paddingBottom: 20,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    // Círculos decorativos - 3 como en Panel
-    circleDecoration1: {
-        position: 'absolute',
-        width: 400,
-        height: 400,
-        borderRadius: 200,
-        backgroundColor: '#003c82',
-        top: -150,
-        right: -150,
-        opacity: 0.08,
+    homeButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    circleDecoration2: {
-        position: 'absolute',
-        width: 350,
-        height: 350,
-        borderRadius: 175,
-        backgroundColor: '#00a8ff',
-        bottom: -120,
-        left: -120,
-        opacity: 0.08,
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
     },
-    circleDecoration3: {
-        position: 'absolute',
-        width: 250,
-        height: 250,
-        borderRadius: 125,
-        backgroundColor: '#1B476A',
-        bottom: 100,
-        right: -80,
-        opacity: 0.05,
+    scrollContent: {
+        flexGrow: 1,
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 40,
     },
     mainTitle: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#003c82',
         marginBottom: 5,
         letterSpacing: 2,
         textAlign: 'center',
     },
     welcomeSubtitle: {
-        fontSize: 16,
-        color: '#4a6fa5',
+        fontSize: 14,
         marginBottom: 30,
         textAlign: 'center',
     },
     card: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 20,
         padding: 25,
         width: '100%',
         maxWidth: 400,
-        // Sombra azul como en Panel
         ...Platform.select({
             ios: {
-                shadowColor: '#003c82',
-                shadowOffset: { width: 0, height: 6 },
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
-                shadowRadius: 15,
+                shadowRadius: 8,
             },
             android: {
-                elevation: 8,
+                elevation: 4,
             },
         }),
-        borderWidth: 1,
-        borderColor: 'rgba(0, 60, 130, 0.1)',
     },
     inputLabel: {
-        color: '#003c82',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        marginBottom: 5,
+        marginBottom: 8,
         marginTop: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderRadius: 12,
+        marginBottom: 15,
+        paddingHorizontal: 12,
+    },
+    inputIcon: {
+        marginRight: 10,
     },
     input: {
-        backgroundColor: '#F5F8FF',
-        color: '#003c82',
-        marginBottom: 15,
-        padding: 15,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#E0E8F0',
+        flex: 1,
+        paddingVertical: 14,
         fontSize: 15,
     },
     pickerContainer: {
-        backgroundColor: '#F5F8FF',
         borderWidth: 1,
-        borderColor: '#E0E8F0',
-        borderRadius: 10,
+        borderRadius: 12,
         marginBottom: 15,
         overflow: 'hidden',
+        height: 50,
+        justifyContent: 'center',
     },
     picker: {
-        color: '#003c82',
         height: 50,
     },
+    pickerLoading: {
+        paddingVertical: 15,
+    },
     button: {
-        backgroundColor: '#003c82',
-        padding: 15,
-        borderRadius: 10,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        padding: 14,
+        borderRadius: 12,
         marginTop: 20,
-        // Sombra azul como en Panel
         ...Platform.select({
             ios: {
                 shadowColor: '#003c82',
@@ -261,17 +365,59 @@ const styles = StyleSheet.create({
                 shadowRadius: 8,
             },
             android: {
-                elevation: 8,
+                elevation: 6,
             },
         }),
     },
     buttonDisabled: {
-        backgroundColor: '#4a6fa5',
         opacity: 0.7,
     },
     buttonText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: 'bold',
+    },
+    infoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        marginTop: 20,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.1)',
+    },
+    infoText: {
+        fontSize: 11,
+        textAlign: 'center',
+    },
+    
+    // CÍRCULOS DECORATIVOS
+    circleDecoration1: {
+        position: 'absolute',
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        top: -150,
+        right: -150,
+        opacity: 0.1,
+    },
+    circleDecoration2: {
+        position: 'absolute',
+        width: 350,
+        height: 350,
+        borderRadius: 175,
+        bottom: -120,
+        left: -120,
+        opacity: 0.1,
+    },
+    circleDecoration3: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        bottom: 100,
+        right: -80,
+        opacity: 0.07,
     },
 });

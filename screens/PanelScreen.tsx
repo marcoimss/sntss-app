@@ -10,7 +10,8 @@ import {
     SafeAreaView,
     StatusBar,
     Platform,
-    Dimensions
+    Dimensions,
+    Linking
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
@@ -33,6 +34,7 @@ import {
 } from 'lucide-react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { useTheme } from '../context/ThemeContext';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const { width, height } = Dimensions.get('window');
 
@@ -183,12 +185,49 @@ export default function PanelScreen({ navigation }: any) {
         );
     };
 
+    const downloadLocalPDF = async (assetModule: any, fileName: string) => {
+        try {
+            const assetInfo = Image.resolveAssetSource(assetModule);
+            const sourceUri = assetInfo.uri;
+            const destPath = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`;
+
+            if (sourceUri.startsWith('http')) {
+                await ReactNativeBlobUtil.config({
+                    path: destPath,
+                    fileCache: true,
+                }).fetch('GET', sourceUri);
+            } else {
+                if (Platform.OS === 'android') {
+                    await ReactNativeBlobUtil.config({
+                        path: destPath,
+                        fileCache: true,
+                    }).fetch('GET', sourceUri);
+                } else {
+                    const cleanPath = sourceUri.replace('file://', '');
+                    const exists = await ReactNativeBlobUtil.fs.exists(destPath);
+                    if (exists) await ReactNativeBlobUtil.fs.unlink(destPath);
+                    await ReactNativeBlobUtil.fs.cp(cleanPath, destPath);
+                }
+            }
+
+            if (Platform.OS === 'ios') {
+                ReactNativeBlobUtil.ios.previewDocument(destPath);
+            } else {
+                ReactNativeBlobUtil.android.actionViewIntent(destPath, 'application/pdf');
+            }
+        } catch (error) {
+            console.error('Error abriendo PDF local: ', error);
+            Alert.alert('Error', 'No se pudo abrir el documento. Asegúrate de tener una aplicación lectora de PDFs.');
+        }
+    };
+
     const getIcon = (titulo: string) => {
         const color = colors.textPrimary;
         const size = 24;
         if (titulo.includes('Constancia')) return <FileText color={color} size={size} strokeWidth={1.8} />;
         if (titulo.includes('CCT')) return <ShieldCheck color={color} size={size} strokeWidth={1.8} />;
         if (titulo.includes('Estatutos')) return <BookOpen color={color} size={size} strokeWidth={1.8} />;
+        if (titulo.includes('Tarjetón')) return <CreditCard color={color} size={size} strokeWidth={1.8} />;
         if (titulo.includes('Calendario') || titulo.includes('2 de Julio')) return <Calendar color={color} size={size} strokeWidth={1.8} />;
         if (titulo.includes('Hipotecario')) return <Home color={color} size={size} strokeWidth={1.8} />;
         if (titulo.includes('Mediano Plazo')) return <TrendingUp color={color} size={size} strokeWidth={1.8} />;
@@ -200,10 +239,12 @@ export default function PanelScreen({ navigation }: any) {
 
     // SOLO QUEDAN LAS OPCIONES PRINCIPALES
     const allMenuItems = [
-        { id: 1, titulo: 'CCT', descripcion: 'Contrato Colectivo de Trabajo', screen: null, publico: true },
-        { id: 2, titulo: 'Estatutos', descripcion: 'Reglamentos y normas', screen: null, publico: true },
-        { id: 3, titulo: 'Calendario', descripcion: 'Fechas importantes y eventos', screen: 'Calendario', publico: true },
-        { id: 9, titulo: 'Scanner QR', descripcion: 'Registro de asistencia', screen: 'Scanner', publico: true },
+        { id: 1, titulo: 'CCT', descripcion: 'Contrato Colectivo de Trabajo', screen: null, url: null, publico: true },
+        { id: 2, titulo: 'Estatutos', descripcion: 'Reglamentos y normas', screen: null, url: null, publico: true },
+        { id: 4, titulo: 'Tarjetón Activo', descripcion: 'Tarjetón Digital Activo IMSS', screen: null, url: 'https://rh.imss.gob.mx/Personal/TarjetonDigital/', publico: true },
+        { id: 5, titulo: 'Tarjetón Jubilado', descripcion: 'Tarjetón Digital Jubilado IMSS', screen: null, url: 'https://rh.imss.gob.mx/Personal/tarjetonjubilados/(S(jbwnwvptmhsti5j5c0prqhpb))/default.aspx', publico: true },
+        { id: 3, titulo: 'Calendario', descripcion: 'Fechas importantes y eventos', screen: 'Calendario', url: null, publico: true },
+        { id: 9, titulo: 'Scanner QR', descripcion: 'Registro de asistencia', screen: 'Scanner', url: null, publico: true },
     ];
 
     const menuItems = allMenuItems.filter(item => isLoggedIn || item.publico);
@@ -219,6 +260,23 @@ export default function PanelScreen({ navigation }: any) {
     const handleCardPress = (item: any) => {
         setGlowCard(item.id);
         setTimeout(() => setGlowCard(null), 300);
+
+        if (item.titulo === 'CCT') {
+            downloadLocalPDF(require('../assets/CCT.pdf'), 'CCT.pdf');
+            return;
+        }
+
+        if (item.titulo === 'Estatutos') {
+            downloadLocalPDF(require('../assets/estatutos.pdf'), 'Estatutos.pdf');
+            return;
+        }
+
+        if (item.url) {
+            Linking.openURL(item.url).catch(() =>
+                Alert.alert('Error', 'No se pudo abrir el enlace. Verifica tu conexión a internet.')
+            );
+            return;
+        }
 
         if (item.screen) {
             navigation.navigate(item.screen);
@@ -649,7 +707,7 @@ export default function PanelScreen({ navigation }: any) {
                     </View>
 
                     {isLoggedIn && (
-                        <TouchableOpacity style={styles.downloadCard} activeOpacity={0.8}>
+                        <TouchableOpacity style={styles.downloadCard} activeOpacity={0.8} onPress={() => downloadLocalPDF(require('../assets/constancia.pdf'), 'Constancia.pdf')}>
                             <View style={styles.downloadContent}>
                                 <View style={styles.downloadIconWrapper}>
                                     <Download color="#FFF" size={32} strokeWidth={2.5} />

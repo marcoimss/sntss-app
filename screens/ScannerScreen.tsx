@@ -90,30 +90,36 @@ export default function ScannerScreen({ navigation }: any) {
     }, [encargado, scanned, tipo]);
 
     const solicitarPermisoYEscaneo = async () => {
-        if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.CAMERA,
-                    {
-                        title: 'Permiso de cámara',
-                        message: 'La app necesita acceso a la cámara para escanear QR',
-                        buttonNeutral: 'Preguntar después',
-                        buttonNegative: 'Cancelar',
-                        buttonPositive: 'Aceptar',
-                    }
-                );
-                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                    setScanned(false);
-                    QRScanner.openScanner();
-                } else {
-                    Alert.alert('Permiso denegado', 'No podemos escanear sin la cámara');
+        // El scanner nativo iOS aún no tiene implementación completa
+        // Solo disponible en Android por ahora
+        if (Platform.OS === 'ios') {
+            Alert.alert(
+                '📱 Función Android',
+                'El escáner QR está optimizado para dispositivos Android. En iOS estará disponible próximamente.',
+                [{ text: 'Entendido' }]
+            );
+            return;
+        }
+
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+                {
+                    title: 'Permiso de cámara',
+                    message: 'La app necesita acceso a la cámara para escanear QR',
+                    buttonNeutral: 'Preguntar después',
+                    buttonNegative: 'Cancelar',
+                    buttonPositive: 'Aceptar',
                 }
-            } catch (err) {
-                console.warn(err);
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                setScanned(false);
+                QRScanner.openScanner();
+            } else {
+                Alert.alert('Permiso denegado', 'No podemos escanear sin la cámara');
             }
-        } else {
-            setScanned(false);
-            QRScanner.openScanner();
+        } catch (err) {
+            console.warn(err);
         }
     };
 

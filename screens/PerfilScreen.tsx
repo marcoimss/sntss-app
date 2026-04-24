@@ -29,6 +29,7 @@ export default function PerfilScreen({ navigation }: any) {
         correo: '',
     });
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
     // PARTÍCULAS GALÁCTICAS
     const particles = useMemo(() => 
@@ -63,6 +64,9 @@ export default function PerfilScreen({ navigation }: any) {
                             correo: '',
                         });
                     }
+                    // Cargar avatar guardado desde PanelScreen
+                    const savedAvatar = await AsyncStorage.getItem('@user_avatar');
+                    setUserAvatar(savedAvatar);
                 } catch (error) {
                     console.error('Error al cargar datos:', error);
                     setIsLoggedIn(false);
@@ -129,11 +133,19 @@ export default function PerfilScreen({ navigation }: any) {
             >
                 {/* Contenedor del avatar/logo */}
                 <View style={[styles.avatarContainer, { backgroundColor: colors.card + 'cc' }]}>
-                    <Image
-                        source={require('../assets/logo.png')}
-                        style={styles.avatar}
-                        resizeMode="contain"
-                    />
+                    {userAvatar ? (
+                        <Image
+                            source={{ uri: `data:image/jpeg;base64,${userAvatar}` }}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <Image
+                            source={require('../assets/logo.png')}
+                            style={styles.avatar}
+                            resizeMode="contain"
+                        />
+                    )}
                 </View>
 
                 {isLoggedIn ? (

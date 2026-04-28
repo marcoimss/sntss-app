@@ -188,26 +188,57 @@ export default function PanelScreen({ navigation }: any) {
     const downloadLocalPDF = async (assetModule: any, fileName: string) => {
         try {
             const assetInfo = Image.resolveAssetSource(assetModule);
-            const sourceUri = assetInfo.uri;
-            const destPath = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`;
+            const sourceUri = String(assetInfo.uri);
+            
+            const destPath = Platform.OS === 'android' 
+                ? `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`
+                : `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`;
 
             if (sourceUri.startsWith('http')) {
-                await ReactNativeBlobUtil.config({
-                    path: destPath,
-                    fileCache: true,
-                }).fetch('GET', sourceUri);
-            } else {
-                if (Platform.OS === 'android') {
-                    await ReactNativeBlobUtil.config({
-                        path: destPath,
-                        fileCache: true,
-                    }).fetch('GET', sourceUri);
-                } else {
-                    const cleanPath = sourceUri.replace('file://', '');
-                    const exists = await ReactNativeBlobUtil.fs.exists(destPath);
-                    if (exists) await ReactNativeBlobUtil.fs.unlink(destPath);
-                    await ReactNativeBlobUtil.fs.cp(cleanPath, destPath);
+                // Modo Debug
+                await ReactNativeBlobUtil.config({ path: destPath }).fetch('GET', sourceUri);
+            } else if (Platform.OS === 'android') {
+                // Modo Release Android: Intentamos leer el asset directamente como base64
+                // Esto suele funcionar mejor que 'cp' con URIs de recursos internos (ej: assets_cct)
+                let success = false;
+                try {
+                    // Intentamos leerlo usando la URI que nos dio RN (ej: assets_cct o asset:/...)
+                    const data = await ReactNativeBlobUtil.fs.readFile(sourceUri, 'base64');
+                    await ReactNativeBlobUtil.fs.writeFile(destPath, data, 'base64');
+                    success = true;
+                } catch (e) {
+                    // Si falla, intentamos con las rutas de force de antes
+                    const possiblePaths = [
+                        `asset:/assets/assets/${fileName}`,
+                        `asset:/assets/${fileName}`,
+                        `bundle-assets://assets/assets/${fileName}`,
+                        `raw://${sourceUri}`,
+                        `asset:/${sourceUri}.pdf`
+                    ];
+                    for (const path of possiblePaths) {
+                        try {
+                            await ReactNativeBlobUtil.fs.cp(path, destPath);
+                            success = true;
+                            break;
+                        } catch (err) { continue; }
+                    }
                 }
+
+                if (!success) {
+                    throw new Error(`No se pudo extraer el recurso '${fileName}' del APK. (ID: ${sourceUri})`);
+                }
+            } else {
+                // iOS Release
+                const cleanPath = sourceUri.replace('file://', '');
+                if (await ReactNativeBlobUtil.fs.exists(destPath)) {
+                    await ReactNativeBlobUtil.fs.unlink(destPath);
+                }
+                await ReactNativeBlobUtil.fs.cp(cleanPath, destPath);
+            }
+
+            const fileExists = await ReactNativeBlobUtil.fs.exists(destPath);
+            if (!fileExists) {
+                throw new Error('Error de escritura: El archivo no se guardó en la memoria temporal.');
             }
 
             if (Platform.OS === 'ios') {
@@ -215,9 +246,12 @@ export default function PanelScreen({ navigation }: any) {
             } else {
                 ReactNativeBlobUtil.android.actionViewIntent(destPath, 'application/pdf');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error abriendo PDF local: ', error);
-            Alert.alert('Error', 'No se pudo abrir el documento. Asegúrate de tener una aplicación lectora de PDFs.');
+            Alert.alert(
+                'Error de Documento', 
+                `Detalle: ${error.message}\n\nIntenta reiniciar la app o contacta a soporte.`
+            );
         }
     };
 

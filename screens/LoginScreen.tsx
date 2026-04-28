@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,6 +12,7 @@ import {
     ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { ArrowLeft, Home, LogIn, User, Lock } from 'lucide-react-native';
 
@@ -22,6 +23,9 @@ export default function LoginScreen({ navigation }: any) {
     const [usuario, setUsuario] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [userAvatar, setUserAvatar] = useState<string | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userData, setUserData] = useState({ nombre: '' });
 
     // PARTÍCULAS GALÁCTICAS
     const particles = useMemo(() => 
@@ -33,6 +37,29 @@ export default function LoginScreen({ navigation }: any) {
             color: colors.particleColors[i % colors.particleColors.length],
             opacity: Math.random() * 0.5 + 0.2,
         })), [colors.particleColors]
+    );
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const loadData = async () => {
+                try {
+                    const data = await AsyncStorage.getItem('userData');
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        setUserData({ nombre: parsed.nombre || '' });
+                        setIsLoggedIn(true);
+                    } else {
+                        setIsLoggedIn(false);
+                    }
+
+                    const savedAvatar = await AsyncStorage.getItem('@user_avatar');
+                    setUserAvatar(savedAvatar);
+                } catch (error) {
+                    console.error('Error al cargar datos:', error);
+                }
+            };
+            loadData();
+        }, [])
     );
 
     const handleLogin = async () => {
@@ -146,12 +173,22 @@ export default function LoginScreen({ navigation }: any) {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Logo */}
-                <Image
-                    source={require('../assets/logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
+                {/* Logo / Avatar */}
+                <View style={[styles.avatarContainer, { backgroundColor: colors.card + 'cc' }]}>
+                    {userAvatar ? (
+                        <Image
+                            source={{ uri: `data:image/jpeg;base64,${userAvatar}` }}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <Image
+                            source={require('../assets/logo.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
 
                 {/* Título principal */}
                 <Text style={[styles.mainTitle, { color: colors.cardAccent }]}>SNTSS</Text>
@@ -280,7 +317,13 @@ const styles = StyleSheet.create({
     logo: {
         width: 100,
         height: 100,
-        marginBottom: 10,
+    },
+    avatarContainer: {
+        marginBottom: 20,
+        borderRadius: 60,
+        padding: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
         ...Platform.select({
             ios: {
                 shadowColor: '#003c82',
@@ -292,6 +335,13 @@ const styles = StyleSheet.create({
                 elevation: 5,
             },
         }),
+    },
+    avatar: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        borderWidth: 2,
+        borderColor: '#003c82',
     },
     mainTitle: {
         fontSize: 32,
